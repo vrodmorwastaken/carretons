@@ -1,0 +1,32 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "functions": {
+    "api/index.js": { "maxDuration": 15 }
+  },
+  "redirects": [
+    {
+      "source": "/index.php",
+      "has": [{ "type": "query", "key": "mod", "value": "(?<mod>[a-z0-9]+)" }],
+      "destination": "/:mod",
+      "permanent": false
+    },
+    { "source": "/index.php",   "destination": "/",        "permanent": false },
+    { "source": "/login.php",   "destination": "/login",   "permanent": false },
+    { "source": "/speaker.php", "destination": "/speaker", "permanent": false },
+    { "source": "/reset.php",   "destination": "/reset",   "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/api.php", "destination": "/api" }
+  ],
+  "headers": [
+    {
+      "source": "/api",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/firebase-messaging-sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ]
+}
