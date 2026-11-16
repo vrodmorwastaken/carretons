@@ -1,0 +1,2461 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Speaker – Carretons</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg:       #F0EDE8;
+  --c-surface:  #FFFFFF;
+  --c-border:   #DDD9D2;
+  --c-text:     #18160F;
+  --c-muted:    #7A7670;
+  --c-accent:   #E8380D;
+  --c-accent2:  #F5A623;
+  --c-green:    #1A8C4E;
+  --c-blue:     #1B5FA8;
+  --c-purple:   #6B3FA0;
+  --c-live:     #E8380D;
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:  0 4px 16px rgba(0,0,0,.09);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,.14);
+
+  --r:          10px;
+  --font-head:  'Barlow Condensed', sans-serif;
+  --font-body:  'Barlow', sans-serif;
+}
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--c-bg);
+  font-family: var(--font-body);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT PRINCIPAL
+═══════════════════════════════════════════════ */
+#app {
+  display: grid;
+  height: 100dvh;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+
+/* ── Alertes ── */
+#zona-alertes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--c-bg);
+  border-bottom: 2px solid var(--c-border);
+  overflow-y: auto;
+  max-height: 160px;
+  z-index: 100;
+}
+#zona-alertes:empty { display: none; }
+.alerta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-family: var(--font-head);
+  font-size: .98rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+  animation: slideDown .25s ease;
+  border-left: 4px solid currentColor;
+}
+@keyframes slideDown {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.alerta-item .ico { font-size: 1.15rem; flex-shrink: 0; }
+.alerta-item .txt { flex: 1; }
+.alerta-item .ts  { font-size: .68rem; font-weight: 400; opacity: .65; white-space: nowrap; font-family: var(--font-body); }
+.alerta-item .btn-close-alerta {
+  background: none; border: none; cursor: pointer;
+  font-size: .95rem; opacity: .5; padding: 2px 5px;
+  border-radius: 4px; transition: opacity .15s;
+  line-height: 1;
+}
+.alerta-item .btn-close-alerta:hover { opacity: 1; }
+
+.alerta--accident   { background: #FEE2E2; color: #991B1B; }
+.alerta--imminent   { background: #FEF3C7; color: #92400E; }
+.alerta--neteja     { background: #DBEAFE; color: #1E40AF; }
+.alerta--entrevista { background: #EDE9FE; color: #5B21B6; }
+.alerta--temps      { background: #D1FAE5; color: #065F46; }
+.alerta--ritme      { background: #FCE7F3; color: #9D174D; }
+.alerta--info       { background: #F3F4F6; color: #374151; }
+
+/* ── Cos principal ── */
+#cos {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  overflow: hidden;
+  grid-template-columns: minmax(0, 220px) 1fr minmax(0, 240px);
+  grid-template-rows: 1fr;
+  min-height: 0;
+}
+
+/* ── Tablet horitzontal ≤ 1024px ── */
+@media (max-width: 1024px) {
+  #cos {
+    grid-template-columns: minmax(0, 190px) 1fr minmax(0, 200px);
+  }
+}
+
+/* ── Tablet vertical / mòbil gran ≤ 768px ──
+   Col·lapsa a: Rankings (amunt esquerra) | Centre | Ordre (amunt dreta) → baix */
+@media (max-width: 768px) {
+  #cos {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+      "esq   centre"
+      "dreta centre";
+  }
+  #col-esq    { grid-area: esq; }
+  #col-centre { grid-area: centre; }
+  #col-dreta  { grid-area: dreta; max-height: 38vh; }
+}
+
+/* ── Mòbil vertical ≤ 480px ──
+   Una sola columna: Centre → Rankings → Ordre */
+@media (max-width: 480px) {
+  #app { grid-template-rows: auto 1fr; }
+  #cos {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "centre"
+      "esq"
+      "dreta";
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 6px;
+    gap: 6px;
+  }
+  #col-esq    { grid-area: esq;    min-height: 0; }
+  #col-centre { grid-area: centre; min-height: 0; }
+  #col-dreta  { grid-area: dreta;  min-height: 200px; max-height: 45vh; }
+  #bloc-rankings { min-height: 180px; }
+  #crono-temps { font-size: 3rem !important; }
+  #compte-num  { font-size: 4rem !important; }
+  .tele-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-rows: repeat(2, auto);
+  }
+  .tele-grid > :nth-child(4),
+  .tele-grid > :nth-child(5) {
+    grid-column: span 1;
+  }
+  .meta-big-num { font-size: 3.5rem !important; }
+  .meta-temps-gran { font-size: 4rem !important; }
+  .zona-alertes { max-height: 100px; }
+}
+
+/* ═══════════════════════════════════════════════
+   COLUMNA ESQUERRA
+═══════════════════════════════════════════════ */
+#col-esq {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.bloc-titol {
+  font-family: var(--font-head);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  margin-bottom: 7px;
+}
+.progres-bar-wrap {
+  background: var(--c-border);
+  border-radius: 4px;
+  height: 4px;
+  margin-top: 9px;
+  overflow: hidden;
+}
+.progres-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-accent), var(--c-accent2));
+  border-radius: 4px;
+  transition: width .6s ease;
+}
+.progres-txt {
+  font-size: .65rem;
+  color: var(--c-muted);
+  text-align: right;
+  margin-top: 3px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+/* ── Rankings ── */
+#bloc-rankings {
+  background: var(--c-surface);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.ranking-tabs {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 8px;
+  background: var(--c-bg);
+  border-radius: 7px;
+  padding: 3px;
+}
+.ranking-tab {
+  flex: 1;
+  padding: 4px 2px;
+  border: none;
+  border-radius: 5px;
+  font-family: var(--font-head);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: transparent;
+  color: var(--c-muted);
+  transition: all .15s;
+}
+.ranking-tab.actiu {
+  background: var(--c-surface);
+  color: var(--c-text);
+  box-shadow: var(--shadow-sm);
+}
+.ranking-llista {
+  flex: 1;
+  overflow-y: auto;
+  display: none;
+}
+.ranking-llista.actiu { display: block; }
+.ranking-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--c-border);
+  font-size: .82rem;
+  transition: background .1s;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ranking-row:last-child { border-bottom: none; }
+.ranking-row:hover { background: var(--c-bg); }
+.rank-pos {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 900;
+  min-width: 22px;
+  text-align: center;
+  line-height: 1;
+}
+.rank-pos.or     { color: #C8960C; }
+.rank-pos.argent { color: #9CA3AF; }
+.rank-pos.bronze { color: #B07850; }
+.rank-nom { flex: 1; font-weight: 600; font-size: .8rem; }
+.rank-val {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: .88rem;
+}
+
+/* ═══════════════════════════════════════════════
+   COLUMNA CENTRE
+═══════════════════════════════════════════════ */
+#col-centre {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+}
+
+/* ── Panel BAIXADA ACTIVA ── */
+#panel-baixada {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+}
+#panel-baixada.visible { display: flex; }
+
+/* ── Bloc combinat: info penya + número/crono ── */
+#bloc-live {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 0;
+}
+
+/* Part esquerra: info penya */
+#live-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+#live-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+#crono-live-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--c-live);
+  flex-shrink: 0;
+  animation: dotPuls 1s infinite;
+}
+@keyframes dotPuls { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(232,56,13,.4);} 50%{opacity:.5;box-shadow:0 0 0 4px rgba(232,56,13,.0);} }
+#live-status-label {
+  font-family: var(--font-head);
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+#crono-nom-penya {
+  font-family: var(--font-head);
+  font-size: 1.65rem;
+  font-weight: 900;
+  color: var(--c-text);
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#crono-carreto-nom {
+  font-size: .95rem;
+  color: var(--c-muted);
+  font-weight: 700;
+  font-family: var(--font-head);
+  letter-spacing: .2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#crono-membres {
+  font-size: .85rem;
+  color: var(--c-muted);
+  font-weight: 600;
+  font-family: var(--font-head);
+  letter-spacing: .1px;
+}
+
+/* Separador vertical */
+#live-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--c-border);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+/* Part dreta: número compte enrere o crono */
+#live-temps-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 130px;
+  flex-shrink: 0;
+}
+#compte-label {
+  font-family: var(--font-head);
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+#compte-num {
+  font-family: var(--font-head);
+  font-size: 5rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--c-text);
+  transition: color .3s, transform .15s;
+}
+#compte-num.urgent {
+  color: var(--c-accent);
+  animation: pulsUrgent .35s infinite alternate;
+}
+@keyframes pulsUrgent {
+  from { transform: scale(1); }
+  to   { transform: scale(1.07); }
+}
+#crono-temps {
+  font-family: var(--font-head);
+  font-size: 3.6rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -2px;
+  color: var(--c-text);
+  display: none;
+}
+#crono-temps.visible { display: block; }
+
+/* ── Telemetria ── */
+#bloc-telemetria {
+  background: var(--c-surface);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--c-border);
+  padding: 8px 12px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.tele-header {
+  font-family: var(--font-head);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  margin-bottom: 8px;
+}
+
+/* Grid comparatives */
+.tele-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 3px 1fr 1fr;
+  gap: 5px;
+  align-items: stretch;
+}
+.tele-divider {
+  background: var(--c-border);
+  border-radius: 2px;
+  align-self: stretch;
+  margin: 2px 0;
+}
+.tele-stat {
+  background: var(--c-bg);
+  border-radius: 7px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--c-border);
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.tele-stat.rapid-equip   { border-color: var(--c-green);  background: rgba(26,140,78,.06); }
+.tele-stat.lenta-equip   { border-color: #E8380D;         background: rgba(232,56,13,.06); }
+.tele-stat.mitjana-equip { border-color: var(--c-blue);   background: rgba(27,95,168,.05); }
+.tele-stat.rapid-global  { border-color: var(--c-green);  background: rgba(26,140,78,.06); }
+.tele-stat.mitjana-global{ border-color: var(--c-blue);   background: rgba(27,95,168,.05); }
+/* Mantenim compatibilitat amb noms antics usats en altres llocs */
+.tele-stat.record-penya  { border-color: var(--c-green);  background: rgba(26,140,78,.06); }
+.tele-stat.record-global { border-color: var(--c-accent); background: rgba(232,56,13,.06); }
+.tele-stat.mes-lenta     { border-color: #9CA3AF;         background: rgba(107,114,128,.05); }
+.tele-stat.mitjana       { border-color: var(--c-blue);   background: rgba(27,95,168,.05); }
+.tele-stat-label {
+  font-size: .58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--c-muted);
+  line-height: 1.2;
+}
+.tele-stat-val {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--c-text);
+  line-height: 1.1;
+}
+.tele-stat-delta {
+  font-family: var(--font-head);
+  font-size: .82rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.tele-stat-delta.per-sobre { color: var(--c-accent); }
+.tele-stat-delta.per-sota  { color: var(--c-green); }
+.tele-stat-delta.igual     { color: var(--c-muted); }
+.tele-badge {
+  position: absolute;
+  top: 4px; right: 4px;
+  font-size: .5rem;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+.tele-badge.record-penya  { background: var(--c-green);  color: #fff; }
+.tele-badge.record-global { background: var(--c-accent); color: #fff; }
+.tele-badge.mes-lenta     { background: #6B7280; color: #fff; }
+
+@keyframes teleStatBlink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: .25; }
+}
+.tele-stat.blink-alert {
+  animation: teleStatBlink .6s ease-in-out infinite;
+}
+
+/* ── Animació creuament de referència (negatiu → positiu) - 10s ── */
+@keyframes crossingFlash {
+  0%    { box-shadow: 0 0 0 0 rgba(232,56,13,0);    background-color: inherit; }
+  5%    { box-shadow: 0 0 0 8px rgba(232,56,13,.6);  background-color: rgba(232,56,13,.22); }
+  15%   { box-shadow: 0 0 0 4px rgba(232,56,13,.3);  background-color: rgba(232,56,13,.12); }
+  25%   { box-shadow: 0 0 0 6px rgba(232,56,13,.45); background-color: rgba(232,56,13,.18); }
+  40%   { box-shadow: 0 0 0 3px rgba(232,56,13,.2);  background-color: rgba(232,56,13,.08); }
+  55%   { box-shadow: 0 0 0 5px rgba(232,56,13,.35); background-color: rgba(232,56,13,.14); }
+  70%   { box-shadow: 0 0 0 2px rgba(232,56,13,.15); background-color: rgba(232,56,13,.06); }
+  85%   { box-shadow: 0 0 0 3px rgba(232,56,13,.20); background-color: rgba(232,56,13,.08); }
+  100%  { box-shadow: 0 0 0 0 rgba(232,56,13,0);    background-color: inherit; }
+}
+.tele-stat.crossing-alert {
+  animation: crossingFlash 10s ease-out forwards;
+}
+
+/* ── Info + historial penya ── */
+#bloc-info-penya {
+  border-radius: var(--r);
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  min-height: 0;
+}
+.info-subpanel {
+  background: var(--c-surface);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+.info-subpanel.descripcio { flex: 2.2; }
+.info-subpanel.historial  { flex: 1; }
+.info-subpanel-title {
+  font-family: var(--font-head);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--c-border);
+  flex-shrink: 0;
+}
+.info-subpanel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  font-size: .84rem;
+  line-height: 1.55;
+}
+.hist-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 4px;
+  border-bottom: 1px solid var(--c-border);
+  font-size: .8rem;
+  border-radius: 4px;
+  transition: background .1s;
+}
+.hist-row:hover { background: var(--c-bg); }
+.hist-row:last-child { border-bottom: none; }
+.hist-num   { font-family: var(--font-head); font-weight: 700; min-width: 18px; color: var(--c-muted); font-size: .85rem; }
+.hist-temps { font-family: var(--font-head); font-weight: 800; min-width: 64px; font-size: .92rem; }
+.hist-icons { display: flex; gap: 4px; font-size: .75rem; align-items: center; }
+.hist-badge-rp { color: var(--c-green); }
+.hist-badge-rg { color: var(--c-accent); }
+
+/* ── Panel REPÒS ── */
+#panel-repos {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+}
+#panel-repos.visible { display: flex; }
+
+/* Cercador */
+#bloc-cercador {
+  background: var(--c-surface);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--c-border);
+  padding: 10px 12px;
+  flex-shrink: 0;
+}
+#input-cerca {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid var(--c-border);
+  border-radius: 7px;
+  font-family: var(--font-body);
+  font-size: .9rem;
+  background: var(--c-bg);
+  outline: none;
+  color: var(--c-text);
+  transition: border-color .15s, box-shadow .15s;
+}
+#input-cerca:focus {
+  border-color: var(--c-blue);
+  box-shadow: 0 0 0 3px rgba(27,95,168,.12);
+}
+#input-cerca::placeholder { color: var(--c-muted); opacity: .8; }
+#llista-cerca {
+  margin-top: 8px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.cerca-item {
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .82rem;
+  transition: background .1s;
+}
+.cerca-item:hover { background: var(--c-bg); }
+.cerca-nom { font-weight: 600; }
+.cerca-carreto { color: var(--c-muted); font-size: .73rem; }
+
+/* Telemetria repòs */
+#bloc-tele-repos {
+  background: var(--c-surface);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--c-border);
+  padding: 10px 14px;
+  flex: 1;
+  overflow-y: auto;
+}
+.repos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+.repos-stat {
+  background: var(--c-bg);
+  border-radius: 7px;
+  padding: 9px 11px;
+  border-left: 3px solid var(--c-border);
+}
+.repos-stat.record-penya  { border-color: var(--c-green);  background: rgba(26,140,78,.05); }
+.repos-stat.record-global { border-color: var(--c-accent); background: rgba(232,56,13,.05); }
+.repos-stat.mes-lenta     { border-color: #9CA3AF; }
+.repos-stat.mitjana       { border-color: var(--c-blue);   background: rgba(27,95,168,.05); }
+.repos-stat-label {
+  font-size: .6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--c-muted);
+}
+.repos-stat-val {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-top: 3px;
+  color: var(--c-text);
+}
+    
+    
+/* ═══════════════════════════════════════════════
+   COLUMNA DRETA – Ordre sortida
+═══════════════════════════════════════════════ */
+#col-dreta {
+  background: var(--c-surface);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--c-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#col-dreta .bloc-titol {
+  padding: 10px 12px 7px;
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: 0;
+}
+#llista-ordre {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.ordre-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--c-bg);
+  transition: background .1s;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+.ordre-item:hover { background: var(--c-bg); }
+.ordre-item.en-pista {
+  background: #FFF3E0;
+  border-left-color: var(--c-accent2);
+}
+.ordre-item.completat { opacity: .38; }
+.ordre-num {
+  font-family: var(--font-head);
+  font-size: .95rem;
+  font-weight: 900;
+  min-width: 22px;
+  color: var(--c-muted);
+  text-align: center;
+}
+.ordre-nom {
+  flex: 1;
+  font-family: var(--font-head);
+  font-size: .87rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.ordre-carreto { font-size: .66rem; color: var(--c-muted); font-weight: 400; }
+.ordre-badge {
+  font-size: .58rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  flex-shrink: 0;
+}
+.ordre-badge.live    { background: var(--c-live);  color: #fff; }
+.ordre-badge.ok      { background: var(--c-green); color: #fff; }
+.ordre-badge.pendent { background: var(--c-border); color: var(--c-muted); }
+
+/* ═══════════════════════════════════════════════
+   OVERLAY META
+═══════════════════════════════════════════════ */
+#overlay-meta {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(248,245,240,.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 20px;
+}
+#overlay-meta.visible {
+  display: flex;
+  animation: fadeIn .3s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
+.meta-emojis {
+  font-size: 3.5rem;
+  margin-bottom: 10px;
+  animation: bounceY 1.2s infinite ease-in-out;
+}
+@keyframes bounceY {
+  0%,100%{ transform: translateY(0); }
+  50%{ transform: translateY(-10px); }
+}
+.meta-penya {
+  font-family: var(--font-head);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  margin-bottom: 2px;
+}
+.meta-temps-gran {
+  font-family: var(--font-head);
+  font-size: 5.5rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--c-text);
+  letter-spacing: -2px;
+}
+.meta-habilitat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 14px 0;
+  font-family: var(--font-head);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+.meta-habilitat span { display: flex; align-items: center; gap: 5px; }
+.meta-notificacio {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 800;
+  padding: 8px 22px;
+  border-radius: 8px;
+  margin: 4px;
+  letter-spacing: .5px;
+  display: inline-block;
+}
+.meta-notificacio.record-penya     { background: var(--c-green);  color: #fff; }
+.meta-notificacio.record-global    { background: var(--c-accent); color: #fff; }
+.meta-notificacio.mes-lenta-penya  { background: #6B7280; color: #fff; }
+.meta-notificacio.mes-lenta-global { background: var(--c-text);   color: #fff; }
+.meta-cta {
+  margin-top: 18px;
+  font-family: var(--font-head);
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  border: 2px solid var(--c-border);
+  padding: 10px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--c-surface);
+  transition: all .15s;
+}
+.meta-cta:hover { background: var(--c-text); color: #fff; border-color: var(--c-text); }
+
+/* ── Resultats meta BIG ── */
+.meta-resultats-big {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  margin: 20px 0 10px;
+}
+.meta-big-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.meta-big-label {
+  font-family: var(--font-head);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+.meta-big-num {
+  font-family: var(--font-head);
+  font-size: 5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.meta-big-num.banderes-ok   { color: var(--c-green); }
+.meta-big-num.banderes-no   { color: var(--c-muted); }
+.meta-big-num.globus-ok { color: var(--c-green); }
+.meta-big-num.globus-petat { color: var(--c-accent); }
+.meta-big-sub {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════
+   MODAL INFO PENYA
+═══════════════════════════════════════════════ */
+#modal-penya {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 900;
+  align-items: center;
+  justify-content: center;
+}
+#modal-penya.visible { display: flex; }
+.modal-box {
+  background: var(--c-surface);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  width: min(90vw, 480px);
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp .2s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.modal-cap {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--c-border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.modal-cap-titol { font-family: var(--font-head); font-size: 1.3rem; font-weight: 900; letter-spacing: .3px; }
+.modal-cap-sub   { font-size: .78rem; color: var(--c-muted); margin-top: 3px; }
+.modal-tanca {
+  background: none; border: none; font-size: 1rem;
+  cursor: pointer; color: var(--c-muted); padding: 4px 8px;
+  border-radius: 6px; transition: background .1s; line-height: 1;
+}
+.modal-tanca:hover { background: var(--c-bg); color: var(--c-text); }
+.modal-cos {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+  font-size: .84rem;
+  line-height: 1.6;
+}
+.modal-seccio { margin-bottom: 14px; }
+.modal-seccio strong {
+  display: block;
+  font-family: var(--font-head);
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  margin-bottom: 5px;
+}
+
+/* ═══════════════════════════════════════════════
+   SPLASH FULLSCREEN
+═══════════════════════════════════════════════ */
+#splash {
+  position: fixed; inset: 0;
+  z-index: 99999;
+  background: var(--c-text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+}
+#splash::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 60%, rgba(232,56,13,.28) 0%, transparent 65%);
+  pointer-events: none;
+}
+#splash .splash-logo {
+  font-size: 5rem;
+  animation: bounceY 1.8s infinite ease-in-out;
+  position: relative;
+}
+#splash .splash-titol {
+  font-family: var(--font-head);
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #fff;
+  line-height: 1;
+  position: relative;
+}
+#splash .splash-sub {
+  font-family: var(--font-head);
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.4);
+  position: relative;
+}
+#splash .splash-divider {
+  width: 48px;
+  height: 2px;
+  background: var(--c-accent);
+  border-radius: 2px;
+  margin: 4px 0;
+}
+#splash .splash-btn {
+  margin-top: 16px;
+  background: var(--c-accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-head);
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 18px 64px;
+  cursor: pointer;
+  box-shadow: 0 4px 32px rgba(232,56,13,.5);
+  animation: pulsBtn 1.6s infinite ease-in-out;
+  transition: transform .1s;
+  position: relative;
+}
+#splash .splash-hint {
+  font-family: var(--font-head);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.22);
+  position: relative;
+}
+#splash .splash-btn:active { transform: scale(.96); }
+@keyframes pulsBtn {
+  0%,100% { box-shadow: 0 4px 24px rgba(232,56,13,.45); }
+  50%      { box-shadow: 0 6px 48px rgba(232,56,13,.8); }
+}
+#splash.hidden { display: none; }
+
+
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-muted); }
+
+/* ═══════════════════════════════════════════════
+   POPUP EXPLICACIÓ CARREPUNTS
+═══════════════════════════════════════════════ */
+#popup-carrepunts {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 950;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#popup-carrepunts.visible { display: flex; animation: fadeIn .2s ease; }
+.carrepunts-box {
+  background: var(--c-surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  width: min(92vw, 520px);
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp .2s ease;
+}
+.carrepunts-cap {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--c-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.carrepunts-cap-titol {
+  font-family: var(--font-head);
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: .4px;
+}
+.carrepunts-cos {
+  overflow-y: auto;
+  padding: 16px 20px 20px;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+.cp-item {
+  background: var(--c-bg);
+  border-radius: 9px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--c-border);
+}
+.cp-item.vel   { border-color: var(--c-blue); }
+.cp-item.band  { border-color: var(--c-green); }
+.cp-item.glob  { border-color: #0891b2; }
+.cp-item.est   { border-color: var(--c-purple); }
+.cp-item.festa { border-color: var(--c-accent2); background: #fffbeb; }
+.cp-titol {
+  font-family: var(--font-head);
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.cp-titol.vel   { color: var(--c-blue); }
+.cp-titol.band  { color: var(--c-green); }
+.cp-titol.glob  { color: #0891b2; }
+.cp-titol.est   { color: var(--c-purple); }
+.cp-titol.festa { color: #92400e; }
+.cp-max {
+  display: inline-block;
+  background: var(--c-text);
+  color: #fff;
+  font-family: var(--font-head);
+  font-size: .6rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: .5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.cp-total-box {
+  background: var(--c-text);
+  color: #fff;
+  border-radius: 9px;
+  padding: 12px 14px;
+  text-align: center;
+  font-family: var(--font-head);
+  margin-top: 4px;
+}
+.cp-desempat {
+  background: #fef3c7;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: .76rem;
+  color: #92400e;
+  margin-top: 8px;
+  border: 1px solid #fbbf24;
+}
+
+/* ── Columna carrepunts al ranking ── */
+.rank-carrepunts {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: .82rem;
+  color: var(--c-accent2);
+  min-width: 38px;
+  text-align: right;
+}
+.rank-titol-cp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+.btn-info-cp {
+  background: none;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  font-size: .65rem;
+  font-weight: 800;
+  font-family: var(--font-head);
+  letter-spacing: .5px;
+  padding: 2px 8px;
+  cursor: pointer;
+  color: var(--c-muted);
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-info-cp:hover {
+  background: var(--c-text);
+  color: #fff;
+  border-color: var(--c-text);
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  #cos {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  #col-esq   { grid-column: 1; grid-row: 1; }
+  #col-dreta { grid-column: 2; grid-row: 1 / 3; }
+  #col-centre{ grid-column: 1; grid-row: 2; }
+}
+@media (max-width: 600px) {
+  #cos {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    overflow-y: auto;
+  }
+  #col-esq    { grid-column: 1; grid-row: 1; }
+  #col-dreta  { grid-column: 1; grid-row: 2; max-height: 220px; }
+  #col-centre { grid-column: 1; grid-row: 3; }
+}
+</style>
+<script>fetch('/api?action=whoami',{credentials:'same-origin'}).then(r=>r.json()).then(d=>{if(!d.auth)location.replace('/login')}).catch(()=>{})</script>
+</head>
+<body>
+
+<!-- ══ SPLASH PANTALLA COMPLETA ══ -->
+<div id="splash" onclick="activarApp()">
+  <div class="splash-logo">🏎️</div>
+  <div class="splash-titol">Carretons</div>
+  <div class="splash-divider"></div>
+  <div class="splash-sub">Panell Speaker</div>
+  <button class="splash-btn">▶ INICIAR</button>
+  <div class="splash-hint">Toca per activar pantalla completa</div>
+</div>
+
+<div id="app">
+
+  <!-- ══ ZONA ALERTES ══ -->
+  <div id="zona-alertes"></div>
+
+  <!-- ══ COS PRINCIPAL ══ -->
+  <div id="cos">
+
+    <!-- ─── Columna Esquerra ─── -->
+    <div id="col-esq">
+
+      <!-- Rankings -->
+      <div id="bloc-rankings">
+        <div class="rank-titol-cp">
+          <div class="bloc-titol" style="margin-bottom:0;">🏆 Top 10</div>
+          <button class="btn-info-cp" onclick="obrirPopupCarrepunts()">ℹ️ Carrepunts</button>
+        </div>
+        <div class="ranking-tabs">
+          <button class="ranking-tab actiu" onclick="canviaRanking('velocitat')">⚡ Vel.</button>
+          <button class="ranking-tab" onclick="canviaRanking('habilitat')">🎯 Hab.</button>
+          <button class="ranking-tab" onclick="canviaRanking('estetica')">🎨 Est.</button>
+          <button class="ranking-tab" onclick="canviaRanking('carrepunts')">🏅 Pts.</button>
+        </div>
+        <div class="ranking-llista actiu" id="rnk-velocitat"></div>
+        <div class="ranking-llista" id="rnk-habilitat"></div>
+        <div class="ranking-llista" id="rnk-estetica"></div>
+        <div class="ranking-llista" id="rnk-carrepunts"></div>
+      </div>
+    </div>
+
+    <!-- ─── Columna Centre ─── -->
+    <div id="col-centre">
+
+      <!-- PANEL BAIXADA ACTIVA -->
+      <div id="panel-baixada">
+
+        <!-- Bloc unificat: info penya + compte/crono en horitzontal -->
+        <div id="bloc-live">
+          <!-- Esquerra: info penya -->
+          <div id="live-info">
+            <div id="live-status-row">
+              <div id="crono-live-dot"></div>
+              <span id="live-status-label">Sortida en</span>
+            </div>
+            <div id="crono-nom-penya">---</div>
+            <div id="crono-carreto-nom"></div>
+            <div id="crono-membres"></div>
+          </div>
+          <!-- Separador -->
+          <div id="live-divider"></div>
+          <!-- Dreta: número compte enrere o crono -->
+          <div id="live-temps-wrap">
+            <div id="compte-label">SORTIDA EN</div>
+            <div id="compte-num">—</div>
+            <div id="crono-temps">00:00.00</div>
+          </div>
+        </div>
+
+        <!-- Telemetria -->
+        <div id="bloc-telemetria">
+          <div class="tele-header" style="display:flex;align-items:center;gap:0;">
+            <span style="flex:3;padding-right:4px;">📊 EQUIP</span>
+            <span style="width:3px;"></span>
+            <span style="flex:2;padding-left:8px;">🌐 GLOBAL</span>
+          </div>
+          <!-- Grid comparatives -->
+          <div class="tele-grid" id="tele-grid"></div>
+        </div>
+
+        <!-- Info + Historial penya actual (dos panells separats) -->
+        <div id="bloc-info-penya">
+          <div class="info-subpanel descripcio">
+            <div class="info-subpanel-title">ℹ️ Descripció</div>
+            <div class="info-subpanel-body" id="info-panel-info">
+              <span style="color:var(--c-muted);font-size:.82rem;">Cap penya activa</span>
+            </div>
+          </div>
+          <div class="info-subpanel historial">
+            <div class="info-subpanel-title">📋 Historial</div>
+            <div class="info-subpanel-body" id="info-panel-historial"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL REPÒS -->
+      <div id="panel-repos">
+
+        <!-- Cercador Penyes -->
+        <div id="bloc-cercador">
+          <div class="bloc-titol">🔍 Cercador de Penyes</div>
+          <input type="text" id="input-cerca" placeholder="Nom de penya o carretó..." oninput="filtraCerca()">
+          <div id="llista-cerca"></div>
+        </div>
+
+        <!-- Estadístiques en repòs -->
+        <div id="bloc-tele-repos">
+          <div class="tele-header">
+            📊 Estadístiques Generals
+          </div>
+          <div class="repos-grid" id="repos-grid">
+            <div style="grid-column:1/-1;color:var(--c-muted);font-size:.82rem;padding:8px 0;">Sense dades enregistrades</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Columna Dreta ─── -->
+    <div id="col-dreta">
+      <div class="bloc-titol">📋 Ordre de Sortida</div>
+      <div id="llista-ordre"></div>
+    </div>
+
+  </div><!-- /cos -->
+</div><!-- /app -->
+
+<!-- ══ OVERLAY META ══ -->
+<div id="overlay-meta">
+  <div class="meta-emojis" id="meta-emojis">🎉</div>
+  <div class="meta-penya" id="meta-nom"></div>
+  <div class="meta-temps-gran" id="meta-temps"></div>
+  <div class="meta-resultats-big" id="meta-resultats-big" style="display:none;">
+    <div class="meta-big-item">
+      <div class="meta-big-label">Banderes</div>
+      <div class="meta-big-num" id="meta-band-ico" style="font-size:3.5rem;">🚩</div>
+      <div class="meta-big-sub" id="meta-band-txt">—</div>
+    </div>
+    <div style="width:2px;height:80px;background:var(--c-border);border-radius:2px;"></div>
+    <div class="meta-big-item">
+      <div class="meta-big-label">Globus</div>
+      <div class="meta-big-num" id="meta-glob-ico" style="font-size:4.5rem;">🎈</div>
+      <div class="meta-big-sub" id="meta-glob-txt">Intact</div>
+    </div>
+  </div>
+  <div id="meta-notificacions"></div>
+  <button class="meta-cta" onclick="tancarOverlayMeta()">
+    TANCA
+  </button>
+</div>
+
+<!-- ══ POPUP EXPLICACIÓ CARREPUNTS ══ -->
+<div id="popup-carrepunts" onclick="if(event.target===this)tancarPopupCarrepunts()">
+  <div class="carrepunts-box">
+    <div class="carrepunts-cap">
+      <span class="carrepunts-cap-titol">🏅 Sistema de Carrepunts</span>
+      <button class="modal-tanca" onclick="tancarPopupCarrepunts()">✕</button>
+    </div>
+    <div class="carrepunts-cos">
+      <p style="color:var(--c-muted);font-size:.78rem;margin-bottom:12px;">
+        Cada penya suma punts de 4 ítems independents. El màxim per ítem és 10 pts.<br>
+        <strong>Màxim total = 40 carrepunts.</strong>
+      </p>
+
+      <div class="cp-item vel">
+        <div class="cp-titol vel">⏱ Ítem 1: Velocitat <span class="cp-max">MÀX 10</span></div>
+        El 50% de les penyes participants (les més ràpides) reben punts en ordre decreixent: la 1a rep 10, la 2a rep 9… fins a 1 punt. La resta reben 0.
+      </div>
+
+      <div class="cp-item band">
+        <div class="cp-titol band">🚩 Ítem 2: Banderes <span class="cp-max">MÀX 10</span></div>
+        <strong>Tot o res.</strong> Aconsegueix les 3 banderes → 10 pts. Qualsevol altre resultat → 0 pts.
+      </div>
+
+      <div class="cp-item glob">
+        <div class="cp-titol glob">🎈 Ítem 3: Globus <span class="cp-max">MÀX 10</span></div>
+        <strong>Tot o res.</strong> El globus d'aigua arriba sencer al final → 10 pts. Si es trenca → 0 pts.
+      </div>
+
+      <div class="cp-item est">
+        <div class="cp-titol est">🎨 Ítem 4: Estètica <span class="cp-max">MÀX 10</span></div>
+        4 jutges puntuen el carretó de 0 a 10 cadascun. El carrepunt és la <strong>mitjana de les 4 notes</strong>.
+      </div>
+
+      <div class="cp-total-box">
+        <div style="font-family:var(--font-head);font-size:.65rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;opacity:.6;margin-bottom:4px;">Carrepunts Finals</div>
+        <div style="font-family:var(--font-head);font-size:1.15rem;font-weight:900;">Vel + Band + Glob + Est = Total (0–40)</div>
+      </div>
+
+      <div class="cp-desempat">
+        ⚖️ <strong>Desempat:</strong> Si dues penyes empaten en total, guanya la de millor temps. Si segueix l'empat, guanya la de millor estètica.
+      </div>
+
+      <div class="cp-item festa" style="margin-top:12px;">
+        <div class="cp-titol festa">🏆 Conversió a Punts de Festa Major</div>
+        <strong>1r, 2n i 3r</strong> → 3 punts &nbsp;|&nbsp;
+        <strong>4t–10è</strong> → 2 punts &nbsp;|&nbsp;
+        <strong>11è en endavant</strong> → 1 punt (participació)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL INFO PENYA ══ -->
+<div id="modal-penya" onclick="if(event.target===this)tancarModal()">
+  <div class="modal-box">
+    <div class="modal-cap">
+      <div>
+        <div class="modal-cap-titol" id="modal-nom"></div>
+        <div class="modal-cap-sub" id="modal-carreto"></div>
+      </div>
+      <button class="modal-tanca" onclick="tancarModal()">✕</button>
+    </div>
+    <div class="modal-cos" id="modal-cos"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+const API_URL = '/api';
+const POLL_MS = 1000;
+
+// ═══════════════════════════════════════════════
+// ESTAT GLOBAL
+// ═══════════════════════════════════════════════
+let estat = {
+  fase: 'repos',      // 'repos' | 'compte' | 'cursa' | 'meta' | 'puntuacio'
+  penyaId: null,
+  penyaNom: '',
+  penyaCarreto: '',
+  penyaCurses: [],    // baixades anteriors de l'equip actual (de getPenyaDetall)
+  sortidaMs: null,
+  cursaId: null,
+  tempsFixat: null,
+  banderes: 0,        // 0 o 3 (tot o res)
+  globus: 0,
+  serverOffset: 0,
+  overlayMetaActiu: false,
+};
+
+let cronoInterval   = null;
+let totesPenyes     = [];
+let rankingData     = {};
+let ultimMissatge   = null;
+let ultimEstat      = null;
+let rankingTab      = 'velocitat';
+
+// ═══════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════
+async function apiCall(action, payload = null) {
+  const opts = {
+    method: payload ? 'POST' : 'GET',
+    headers: payload ? { 'Content-Type': 'application/json' } : {}
+  };
+  if (payload) opts.body = JSON.stringify(payload);
+  try {
+    const r = await fetch(`${API_URL}?action=${action}`, opts);
+    if (!r.ok) return { error: `HTTP ${r.status}` };
+    const t = await r.text();
+    try { return JSON.parse(t); } catch { return { error: 'JSON parse error' }; }
+  } catch (e) { return { error: 'Xarxa: ' + e.message }; }
+}
+
+// ═══════════════════════════════════════════════
+// SONS (Web Audio API – integrats, cap arxiu extern)
+// ═══════════════════════════════════════════════
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function soComptaEnrere(seg) {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sine';
+  const freq = seg <= 3 ? 880 : 660;
+  osc.frequency.setValueAtTime(freq, ctx.currentTime);
+  gain.gain.setValueAtTime(seg <= 3 ? 0.35 : 0.2, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.12);
+}
+
+function soSortida() {
+  const ctx = getAudioCtx();
+  [0, 0.08, 0.18].forEach((delay, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime([523, 659, 784][i], ctx.currentTime + delay);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + 0.3);
+  });
+}
+
+function soParaCrono() {
+  const ctx = getAudioCtx();
+  [[880, 0], [660, 0.2], [440, 0.4]].forEach(([freq, delay]) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.35);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + 0.35);
+  });
+}
+
+function soCrossing() {
+  try {
+    const ctx = getAudioCtx();
+    [[523, 0], [880, 0.12]].forEach(([freq, delay]) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.28, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.22);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.22);
+    });
+  } catch(e) {}
+}
+
+// FIX: la funció soAlerta estava trencada al codi original:
+// el cos apareixia solt sense la declaració de funció (function soAlerta)
+function soAlerta(tipus) {
+  const ctx = getAudioCtx();
+  const perfils = {
+    accident:   { freqs: [1047,784,523], delays:[0,.12,.24], type:'sawtooth', vol:0.35 },
+    imminent:   { freqs: [659,880],     delays:[0,.15],      type:'square',   vol:0.28 },
+    neteja:     { freqs: [523,659,784], delays:[0,.12,.24],  type:'sine',     vol:0.22 },
+    entrevista: { freqs: [784,880],     delays:[0,.18],      type:'triangle', vol:0.25 },
+    ritme:      { freqs: [880,1047],    delays:[0,.08],      type:'square',   vol:0.3  },
+    temps:      { freqs: [523,523],     delays:[0,.25],      type:'sine',     vol:0.2  },
+    info:       { freqs: [660],         delays:[0],          type:'sine',     vol:0.18 },
+  };
+  const p = perfils[tipus] || perfils.info;
+  p.freqs.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = p.type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + p.delays[i]);
+    gain.gain.setValueAtTime(p.vol, ctx.currentTime + p.delays[i]);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + p.delays[i] + 0.28);
+    osc.start(ctx.currentTime + p.delays[i]);
+    osc.stop(ctx.currentTime + p.delays[i] + 0.28);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// FULLSCREEN
+// ═══════════════════════════════════════════════
+function intentaFullscreen() {
+  const el = document.documentElement;
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
+  if (fn) fn.call(el).catch(() => {});
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+function activarApp() {
+  intentaFullscreen();
+  document.getElementById('splash').classList.add('hidden');
+  syncRellotge();
+  carregaPenyes();
+  buclePolling();
+  mostraPanellRepos();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // No fem res fins que l'usuari clica al splash
+});
+
+// ═══════════════════════════════════════════════
+// SINCRONITZACIÓ RELLOTGE
+// ═══════════════════════════════════════════════
+async function syncRellotge() {
+  const t0 = Date.now();
+  const r  = await apiCall('getServerTime');
+  const t3 = Date.now();
+  if (r && r.server_time && !r.error) {
+    estat.serverOffset = r.server_time - (t0 + t3) / 2;
+  }
+  setTimeout(syncRellotge, 30_000);
+}
+function ara() { return Date.now() + estat.serverOffset; }
+
+// ═══════════════════════════════════════════════
+// ALERTES
+// ═══════════════════════════════════════════════
+const ALERT_MAP = {
+  'fes temps':                  { cls: 'temps',      ico: '⏳' },
+  'entrevista a aquesta penya': { cls: 'entrevista', ico: '🎤' },
+  'entrevista':                 { cls: 'entrevista', ico: '🎤' },
+  'baixada imminent':           { cls: 'imminent',   ico: '⚡' },
+  'accident a pista':           { cls: 'accident',   ico: '🚨' },
+  'accident':                   { cls: 'accident',   ico: '🚨' },
+  'netejant pista':             { cls: 'neteja',     ico: '🧹' },
+  'pista neteja':               { cls: 'neteja',     ico: '🧹' },
+  'ves més ràpid':              { cls: 'ritme',      ico: '🏎️' },
+  'ves mes rapid':              { cls: 'ritme',      ico: '🏎️' },
+  'pista tancada':              { cls: 'accident',   ico: '🔴' },
+  'pista oberta':               { cls: 'temps',      ico: '🟢' },
+};
+
+function tipusAlerta(text) {
+  if (!text) return null;
+  const lower = text.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  for (const [key, val] of Object.entries(ALERT_MAP)) {
+    const keyNorm = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (lower.includes(keyNorm)) return val;
+  }
+  return { cls: 'info', ico: '📢' };
+}
+
+let alertaIdCont = 0;
+function afegirAlerta(text) {
+  if (!text || text === ultimMissatge) return;
+  ultimMissatge = text;
+  const tipus = tipusAlerta(text);
+  if (!tipus) return;
+  const id  = ++alertaIdCont;
+  const zona = document.getElementById('zona-alertes');
+  const ts  = new Date().toLocaleTimeString('ca', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const div = document.createElement('div');
+  div.className = `alerta-item alerta--${tipus.cls}`;
+  div.id = `alerta-${id}`;
+  div.innerHTML = `
+    <span class="ico">${tipus.ico}</span>
+    <span class="txt">${escHtml(text)}</span>
+    <span class="ts">${ts}</span>
+    <button class="btn-close-alerta" onclick="tancarAlerta(${id})" title="Tanca">✕</button>
+  `;
+  zona.appendChild(div);
+  zona.scrollTop = zona.scrollHeight;
+  try { soAlerta(tipus.cls); } catch(e) {}
+}
+function tancarAlerta(id) {
+  document.getElementById(`alerta-${id}`)?.remove();
+}
+
+function afegirAlertaDirecta(text, cls) {
+  const id   = ++alertaIdCont;
+  const zona = document.getElementById('zona-alertes');
+  const ts   = new Date().toLocaleTimeString('ca', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const ico  = cls === 'accident' ? '🔴' : '🟢';
+  const div  = document.createElement('div');
+  div.className = `alerta-item alerta--${cls}`;
+  div.id = `alerta-${id}`;
+  div.innerHTML = `
+    <span class="ico">${ico}</span>
+    <span class="txt">${escHtml(text)}</span>
+    <span class="ts">${ts}</span>
+    <button class="btn-close-alerta" onclick="tancarAlerta(${id})" title="Tanca">✕</button>
+  `;
+  zona.appendChild(div);
+  zona.scrollTop = zona.scrollHeight;
+  try { soAlerta(cls); } catch(e) {}
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══════════════════════════════════════════════
+// TANCA TOTS ELS PANELLS SECUNDARIS
+// FIX: eliminada la condició incorrecta que impedia tancar l'overlay en
+// transicions a meta. Ara tanca el modal sempre; l'overlay meta es gestiona
+// independentment des de processaLive.
+// ═══════════════════════════════════════════════
+function tancaTotElsSecundaris() {
+  tancarModal();
+}
+
+// ═══════════════════════════════════════════════
+// POLLING PRINCIPAL
+// ═══════════════════════════════════════════════
+let primerPoll = true;
+let ultimBloqueig = null;
+
+async function buclePolling() {
+  try {
+    const [live, proximes, ordre, rankings, carrepunts] = await Promise.all([
+      apiCall('getLiveStatus'),
+      apiCall('getProximesPenyes'),
+      apiCall('getOrdreSortida'),
+      apiCall('getRankingsFull'),
+      apiCall('getCarrepunts'),
+    ]);
+
+    if (primerPoll) {
+      primerPoll = false;
+      if (live && !live.error && live.missatge_speaker) {
+        ultimMissatge = live.missatge_speaker;
+      }
+      if (live && !live.error) {
+        ultimBloqueig = parseInt(live.bloqueig_direccio) || 0;
+      }
+    } else if (live && !live.error) {
+      const nouBloqueig = parseInt(live.bloqueig_direccio) || 0;
+      if (ultimBloqueig !== null && nouBloqueig !== ultimBloqueig) {
+        if (nouBloqueig === 1) {
+          afegirAlertaDirecta('🔴 PISTA TANCADA per Direcció de Carrera', 'accident');
+        } else {
+          afegirAlertaDirecta('🟢 PISTA OBERTA per Direcció de Carrera', 'temps');
+        }
+      }
+      ultimBloqueig = nouBloqueig;
+    }
+
+    processaLive(live);
+    actualitzaPropers(proximes, ordre);
+    actualitzaOrdre(ordre, live);
+    actualitzaRankings(rankings, carrepunts);
+    heartbeat();
+  } catch(e) {
+    console.warn('Poll error:', e);
+  }
+  setTimeout(buclePolling, POLL_MS);
+}
+
+// ═══════════════════════════════════════════════
+// PROCESSA ESTAT LIVE
+// FIX: la transició a meta ara comprova overlayMetaActiu per evitar
+// re-obrir l'overlay si ja és obert i arriba un nou poll amb estat=1.
+// La lògica de tancament de l'overlay s'ha tret de tancaTotElsSecundaris
+// (on causava problemes) i ara es gestiona exclusivament aquí.
+// ═══════════════════════════════════════════════
+async function processaLive(live) {
+  if (!live || live.error) return;
+
+  if (live.missatge_speaker && live.missatge_speaker !== ultimMissatge) {
+    afegirAlerta(live.missatge_speaker);
+  }
+
+  const nouEstat = live.estat;
+
+  // ── Carrega detall de penya si ha canviat ──
+  // IMPORTANT: fem el fetch PRIMER i esperem que acabi abans de processar
+  // la fase. Així evitem la race condition on resetTeleGrid() s'executava
+  // amb penyaNom/penyaCurses encara buits i el grid quedava congelat.
+  if (live.penya_id && live.penya_id !== estat.penyaId) {
+    estat.penyaId = live.penya_id;
+    const memEl = document.getElementById('crono-membres');
+    if (memEl) memEl.textContent = '';
+    // Buidem les dades anteriors mentre esperem
+    estat.penyaNom    = '';
+    estat.penyaCarreto = '';
+    estat.penyaCurses  = [];
+    try {
+      const detall = await (await fetch(`${API_URL}?action=getPenyaDetall&id=${encodeURIComponent(live.penya_id)}`)).json();
+      if (detall && detall.info) {
+        const p = detall.info;
+        estat.penyaNom     = p.nom || '';
+        estat.penyaCarreto = p.nom_carreto || '';
+        estat.penyaCurses  = (detall.curses || []).filter(c => !c.dnf && !c.invalida && c.temps_total_ms > 0);
+        Object.keys(teleDeltaPrevi).forEach(k => delete teleDeltaPrevi[k]);
+        document.getElementById('crono-nom-penya').textContent   = estat.penyaNom;
+        document.getElementById('crono-carreto-nom').textContent = estat.penyaCarreto ? `🛒 ${estat.penyaCarreto}` : '';
+        renderInfoPenya(detall);
+        renderHistorialPenya(detall);
+      }
+    } catch(e) { console.warn('Error carregant detall penya:', e); }
+  }
+
+  // ── FASE: COMPTE ENRERE ──
+  if (nouEstat === '0' || nouEstat === 0) {
+    estat.sortidaMs = parseInt(live.sortida_ms);
+    const msRestants = estat.sortidaMs - ara();
+
+    if (msRestants > 0) {
+      if (estat.fase !== 'compte') {
+        estat.fase = 'compte';
+        tancaTotElsSecundaris();
+        tancarPopupCarrepunts(); // tanca el popup si estava obert
+        if (estat.overlayMetaActiu) {
+          document.getElementById('overlay-meta').classList.remove('visible');
+          estat.overlayMetaActiu = false;
+        }
+        mostraPanellBaixada();
+        mostrarBlocCompte(true);
+        // Ara les dades de penya ja estan carregades → el grid es construeix correctament
+        resetTeleGrid();
+        if (window._compteInterval) clearInterval(window._compteInterval);
+        window._compteInterval = setInterval(() => {
+          if (estat.fase !== 'compte') { clearInterval(window._compteInterval); return; }
+          const ms  = estat.sortidaMs - ara();
+          if (ms <= 0) { clearInterval(window._compteInterval); return; }
+          const seg = Math.ceil(ms / 1000);
+          const el  = document.getElementById('compte-num');
+          if (!el) return;
+          const prev = parseInt(el.textContent) || 99;
+          el.textContent = seg;
+          el.className   = seg <= 3 ? 'urgent' : '';
+          if (seg !== prev && seg <= 10) {
+            try { soComptaEnrere(seg); } catch(e) {}
+          }
+        }, 100);
+      }
+      const segs = Math.ceil(msRestants / 1000);
+      const el   = document.getElementById('compte-num');
+      el.textContent = segs;
+      el.className   = segs <= 3 ? 'urgent' : '';
+
+    } else {
+      if (estat.fase !== 'cursa') {
+        if (window._compteInterval) { clearInterval(window._compteInterval); window._compteInterval = null; }
+        estat.fase = 'cursa';
+        tancaTotElsSecundaris();
+        mostraPanellBaixada();
+        mostrarBlocCompte(false);
+        // Ara les dades de penya ja estan carregades → iniciarCrono trobarà el grid construït
+        resetTeleGrid();
+        try { soSortida(); } catch(e) {}
+        iniciarCrono();
+      }
+    }
+
+  // ── FASE: META ──
+  // FIX: afegida comprovació !estat.overlayMetaActiu per evitar re-obrir
+  // l'overlay en cada poll mentre la baixada ja ha acabat
+  } else if ((nouEstat === '1' || nouEstat === 1) && estat.fase !== 'meta' && estat.fase !== 'puntuacio' && !estat.overlayMetaActiu) {
+    estat.fase       = 'meta';
+    estat.tempsFixat = live.temps_fixat ? parseInt(live.temps_fixat) : null;
+    estat.cursaId    = live.cursa_id;
+    aturarCrono();
+    try { soParaCrono(); } catch(e) {}
+    if (estat.tempsFixat) {
+      document.getElementById('crono-temps').textContent = formatTemps(estat.tempsFixat);
+    }
+    actualitzaTeleGrid();
+    await mostrarOverlayMeta(live);
+
+  // ── FASE: PUNTUACIÓ ──
+  } else if ((nouEstat === '2' || nouEstat === 2) && estat.fase === 'meta') {
+    estat.fase     = 'puntuacio';
+    estat.banderes = parseInt(live.banderes) || 0;
+    estat.globus   = parseInt(live.globus_petat) || 0;
+    actualitzaTeleGrid();
+    actualitzaOverlayHabilitat();
+
+  // ── FASE: REPÒS ──
+  } else if ((nouEstat === null || nouEstat === undefined || nouEstat === '') && !estat.overlayMetaActiu) {
+    if (estat.fase !== 'repos') {
+      estat.fase    = 'repos';
+      estat.penyaId = null;
+      aturarCrono();
+      mostraPanellRepos();
+      resetTeleGrid();
+    }
+  }
+
+  ultimEstat = nouEstat;
+}
+
+// ═══════════════════════════════════════════════
+// PANELLS
+// ═══════════════════════════════════════════════
+function mostraPanellBaixada() {
+  document.getElementById('panel-baixada').classList.add('visible');
+  document.getElementById('panel-repos').classList.remove('visible');
+}
+function mostraPanellRepos() {
+  document.getElementById('panel-baixada').classList.remove('visible');
+  document.getElementById('panel-repos').classList.add('visible');
+}
+function mostrarBlocCompte(actiu) {
+  const compteNum  = document.getElementById('compte-num');
+  const cronoTemps = document.getElementById('crono-temps');
+  const label      = document.getElementById('compte-label');
+  const statusLabel = document.getElementById('live-status-label');
+  if (actiu) {
+    compteNum.style.display  = 'block';
+    cronoTemps.classList.remove('visible');
+    if (label) label.style.display = 'block';
+    if (statusLabel) statusLabel.textContent = 'Sortida en';
+  } else {
+    compteNum.style.display  = 'none';
+    cronoTemps.classList.add('visible');
+    if (label) label.style.display = 'none';
+    if (statusLabel) statusLabel.textContent = '🔴 En Pista';
+  }
+}
+function resetTeleGrid() {
+  teleGridBuilt = false;
+  Object.keys(teleDeltaPrevi).forEach(k => delete teleDeltaPrevi[k]);
+  Object.keys(teleBlinkTimers).forEach(k => { clearTimeout(teleBlinkTimers[k]); delete teleBlinkTimers[k]; });
+  Object.keys(teleCrossingTimers).forEach(k => { clearTimeout(teleCrossingTimers[k]); delete teleCrossingTimers[k]; });
+
+  if (!estat.penyaId && !estat.penyaNom) {
+    const grid = document.getElementById('tele-grid');
+    if (grid) grid.innerHTML = '';
+    return;
+  }
+  actualitzaTeleGrid();
+}
+
+// ═══════════════════════════════════════════════
+// CRONO
+// ═══════════════════════════════════════════════
+function iniciarCrono() {
+  aturarCrono();
+  cronoInterval = setInterval(() => {
+    if (!estat.sortidaMs) return;
+    const diff = ara() - estat.sortidaMs;
+    if (diff < 0) return;
+    document.getElementById('crono-temps').textContent = formatTemps(diff);
+    if (estat.fase === 'cursa') actualitzaTeleGrid();
+  }, 100);
+}
+function aturarCrono() {
+  if (cronoInterval) { clearInterval(cronoInterval); cronoInterval = null; }
+}
+function formatTemps(ms) {
+  if (!ms || isNaN(ms) || ms < 0) return '00:00.00';
+  const min = Math.floor(ms / 60_000);
+  const sec = Math.floor((ms % 60_000) / 1_000);
+  const cs  = Math.floor((ms % 1_000) / 10);
+  return `${pad(min)}:${pad(sec)}.${pad(cs)}`;
+}
+function pad(n) { return String(n).padStart(2, '0'); }
+
+// ═══════════════════════════════════════════════
+// TELEMETRIA
+// ═══════════════════════════════════════════════
+const teleDeltaPrevi  = {};
+const teleBlinkTimers = {};
+const teleCrossingTimers = {};
+
+const TELE_CELS = [
+  { id: 'tc-millor-equip',   label: '🏎 Millor Equip',   cls: 'rapid-equip'   },
+  { id: 'tc-mitjana-equip',  label: '📊 Mitjana Equip',  cls: 'mitjana-equip' },
+  { id: 'tc-pitjor-equip',   label: '🐢 Pitjor Equip',   cls: 'lenta-equip'   },
+  null, // divider
+  { id: 'tc-millor-global',  label: '🌍 Millor Global',  cls: 'rapid-global'  },
+  { id: 'tc-mitjana-global', label: '📈 Mitjana Global', cls: 'mitjana-global'},
+];
+
+let teleGridBuilt = false;
+
+function construeixTeleGrid() {
+  const grid = document.getElementById('tele-grid');
+  if (!grid) return;
+  grid.innerHTML = TELE_CELS.map((c, i) => {
+    if (!c) return '<div class="tele-divider"></div>';
+    return `<div class="tele-stat ${c.cls}" id="${c.id}">
+      <div class="tele-badge" id="${c.id}-badge" style="display:none"></div>
+      <div class="tele-stat-label">${c.label}</div>
+      <div class="tele-stat-val" id="${c.id}-val">--:--.--</div>
+      <span class="tele-stat-delta igual" id="${c.id}-delta">—</span>
+    </div>`;
+  }).join('');
+  teleGridBuilt = true;
+}
+
+function activaBlinkTeleStat(celId) {
+  const cel = document.getElementById(celId);
+  if (!cel) return;
+  if (teleBlinkTimers[celId]) clearTimeout(teleBlinkTimers[celId]);
+  cel.classList.add('blink-alert');
+  teleBlinkTimers[celId] = setTimeout(() => {
+    cel.classList.remove('blink-alert');
+    delete teleBlinkTimers[celId];
+  }, 10000);
+}
+
+function activaCrossingTeleStat(celId) {
+  const cel = document.getElementById(celId);
+  if (!cel) return;
+  cel.classList.remove('crossing-alert');
+  void cel.offsetWidth;
+  cel.classList.add('crossing-alert');
+  if (teleCrossingTimers[celId]) clearTimeout(teleCrossingTimers[celId]);
+  teleCrossingTimers[celId] = setTimeout(() => {
+    cel.classList.remove('crossing-alert');
+    delete teleCrossingTimers[celId];
+  }, 10000);
+}
+
+function actualitzaTeleGrid() {
+  if (!estat.penyaId && !estat.penyaNom) {
+    teleGridBuilt = false;
+    const grid = document.getElementById('tele-grid');
+    if (grid) grid.innerHTML = '';
+    return;
+  }
+
+  if (!teleGridBuilt) construeixTeleGrid();
+
+  const cursesEquip = (estat.penyaCurses || []);
+  const tempsEquip  = cursesEquip.map(c => parseInt(c.temps_total_ms)).filter(v => v > 0);
+  const millorEquip  = tempsEquip.length ? Math.min(...tempsEquip) : null;
+  const lentaEquip   = tempsEquip.length ? Math.max(...tempsEquip) : null;
+  const mitjanaEquip = tempsEquip.length
+    ? Math.round(tempsEquip.reduce((a, b) => a + b, 0) / tempsEquip.length) : null;
+
+  const totsEquips   = (rankingData.vel_tots || rankingData.vel_millor || []);
+  const totsTemps    = totsEquips.map(r => parseInt(r.temps)).filter(v => v > 0);
+  const millorGlobal  = totsTemps.length ? Math.min(...totsTemps) : null;
+  const mitjanaGlobal = totsTemps.length
+    ? Math.round(totsTemps.reduce((a, b) => a + b, 0) / totsTemps.length) : null;
+
+  const t = estat.tempsFixat || (estat.sortidaMs ? (ara() - estat.sortidaMs) : null);
+
+  const esRecordGlobal  = t && millorGlobal && t < millorGlobal;
+  const esRecordEquip   = !esRecordGlobal && t && millorEquip && t < millorEquip;
+  const esMesLentaEquip = t && lentaEquip && t > lentaEquip;
+
+  const refs = [
+    { ref: millorEquip,   id: 'tc-millor-equip',   badge: esRecordEquip   ? '🏆 NOU REC.' : null },
+    { ref: mitjanaEquip,  id: 'tc-mitjana-equip',  badge: null },
+    { ref: lentaEquip,    id: 'tc-pitjor-equip',   badge: esMesLentaEquip ? '🐢' : null },
+    { ref: millorGlobal,  id: 'tc-millor-global',  badge: esRecordGlobal  ? '🌟 RÈCORD' : null },
+    { ref: mitjanaGlobal, id: 'tc-mitjana-global', badge: null },
+  ];
+
+  refs.forEach(({ ref, id, badge }, idx) => {
+    const valEl   = document.getElementById(`${id}-val`);
+    const deltaEl = document.getElementById(`${id}-delta`);
+    const badgeEl = document.getElementById(`${id}-badge`);
+    if (!valEl || !deltaEl) return;
+
+    valEl.textContent = ref !== null ? formatTemps(Math.round(ref)) : '--:--.--';
+
+    if (badgeEl) {
+      if (badge) { badgeEl.textContent = badge; badgeEl.style.display = ''; }
+      else        { badgeEl.style.display = 'none'; }
+    }
+
+    if (!t || ref === null) {
+      deltaEl.textContent = '—';
+      deltaEl.className   = 'tele-stat-delta igual';
+      return;
+    }
+    const d = t - ref;
+    if (Math.abs(d) < 10) {
+      deltaEl.textContent = '±00:00.00';
+      deltaEl.className   = 'tele-stat-delta igual';
+    } else {
+      const sign = d > 0 ? '+' : '−';
+      const cls  = d > 0 ? 'per-sobre' : 'per-sota';
+      deltaEl.textContent = `${sign}${formatTemps(Math.abs(d))}`;
+      deltaEl.className   = `tele-stat-delta ${cls}`;
+    }
+
+    const prevD = teleDeltaPrevi[idx];
+    if (prevD !== undefined && t) {
+      if (prevD < -10 && d > 10) {
+        activaCrossingTeleStat(id);
+        try { soCrossing(); } catch(e) {}
+      } else if (prevD > 10 && d < -10) {
+        activaBlinkTeleStat(id);
+      }
+    }
+    teleDeltaPrevi[idx] = d;
+  });
+}
+
+function actualitzaReposGrid() {
+  if (!rankingData || (!rankingData.vel_tots && !rankingData.vel_millor)) return;
+  const tots      = (rankingData.vel_tots || rankingData.vel_millor || []);
+  const totsTemps = tots.map(r => parseInt(r.temps)).filter(t => t > 0);
+  const millorG   = totsTemps.length ? Math.min(...totsTemps) : null;
+  const mesLentaG = totsTemps.length ? Math.max(...totsTemps) : null;
+  const mitjanaG  = totsTemps.length ? totsTemps.reduce((a,b)=>a+b,0)/totsTemps.length : null;
+  const total     = tots.length;
+
+  document.getElementById('repos-grid').innerHTML = [
+    `<div class="repos-stat record-global"><div class="repos-stat-label">🌟 Rècord Global</div><div class="repos-stat-val">${millorG ? formatTemps(Math.round(millorG)) : '—'}</div></div>`,
+    `<div class="repos-stat record-penya"><div class="repos-stat-label">📊 Baixades totals</div><div class="repos-stat-val">${total}</div></div>`,
+    `<div class="repos-stat mitjana"><div class="repos-stat-label">📈 Mitjana Global</div><div class="repos-stat-val">${mitjanaG ? formatTemps(Math.round(mitjanaG)) : '—'}</div></div>`,
+    `<div class="repos-stat mes-lenta"><div class="repos-stat-label">🐢 Més Lenta Global</div><div class="repos-stat-val">${mesLentaG ? formatTemps(Math.round(mesLentaG)) : '—'}</div></div>`,
+  ].join('');
+}
+
+// ═══════════════════════════════════════════════
+// OVERLAY META
+// ═══════════════════════════════════════════════
+async function mostrarOverlayMeta(live) {
+  // Si l'overlay ja és visible, no el re-obrim (evita el bucle de polling)
+  if (estat.overlayMetaActiu) return;
+  estat.overlayMetaActiu = true;
+  tancarModal();
+
+  const overlay = document.getElementById('overlay-meta');
+  overlay.classList.add('visible');
+
+  document.getElementById('meta-nom').textContent   = escHtml(estat.penyaNom.toUpperCase());
+  const t = estat.tempsFixat || 0;
+  document.getElementById('meta-temps').textContent  = formatTemps(t);
+  document.getElementById('meta-emojis').textContent = '🏁';
+  document.getElementById('meta-resultats-big').style.display = 'none';
+
+  const nots = [];
+  if ((rankingData.vel_tots || rankingData.vel_millor) && t > 0) {
+    const tots = rankingData.vel_tots || rankingData.vel_millor;
+
+    // Temps ANTERIORS de la mateixa penya (sense el temps actual, que encara no és al ranking)
+    const tempsPenya = tots
+      .filter(r => r.nom === estat.penyaNom)
+      .map(r => parseInt(r.temps))
+      .filter(v => v > 0);
+
+    // Temps globals excloent la penya actual (per comparació justa)
+    const totsTemps = tots
+      .filter(r => r.nom !== estat.penyaNom)
+      .map(r => parseInt(r.temps))
+      .filter(v => v > 0);
+
+    const millorP   = tempsPenya.length ? Math.min(...tempsPenya) : null;
+    const millorG   = totsTemps.length  ? Math.min(...totsTemps)  : null;
+    const mesLentaP = tempsPenya.length ? Math.max(...tempsPenya) : null;
+    const mesLentaG = totsTemps.length  ? Math.max(...totsTemps)  : null;
+
+    // Records (positius primer)
+    if (millorG !== null && t < millorG)
+      nots.push(`<div class="meta-notificacio record-global">🌟 NOU RÈCORD GLOBAL!</div>`);
+    else if (millorP !== null && t < millorP)
+      nots.push(`<div class="meta-notificacio record-penya">🏆 RÈCORD DE PENYA!</div>`);
+
+    // Més lenta — només si hi ha ALTRES equips amb els quals comparar
+    if (totsTemps.length > 0) {
+      if (mesLentaG !== null && t > mesLentaG)
+        nots.push(`<div class="meta-notificacio mes-lenta-global">🐢 La Més Lenta de Totes!</div>`);
+      else if (mesLentaP !== null && t > mesLentaP)
+        nots.push(`<div class="meta-notificacio mes-lenta-penya">🐢 La Més Lenta de la Penya</div>`);
+    }
+  }
+  document.getElementById('meta-notificacions').innerHTML = nots.join('');
+}
+
+function actualitzaOverlayHabilitat() {
+  const band = estat.banderes || 0; // 0 o 3
+  const glob = estat.globus   || 0;
+  document.getElementById('meta-emojis').textContent    = '🎉';
+  document.getElementById('meta-resultats-big').style.display = 'flex';
+
+  const bandIco = document.getElementById('meta-band-ico');
+  const bandTxt = document.getElementById('meta-band-txt');
+  if (band === 3) {
+    bandIco.textContent = '🚩🚩🚩';
+    bandIco.className   = 'meta-big-num banderes-ok';
+    bandTxt.textContent = '10 PTS';
+  } else {
+    bandIco.textContent = '✗';
+    bandIco.className   = 'meta-big-num banderes-no';
+    bandTxt.textContent = '0 PTS';
+  }
+
+  const globIco = document.getElementById('meta-glob-ico');
+  const globTxt = document.getElementById('meta-glob-txt');
+  if (glob === 0) {
+    globIco.textContent = '🎈';
+    globIco.className   = 'meta-big-num globus-ok';
+    globTxt.textContent = 'SALVAT';
+  } else {
+    globIco.textContent = '💥';
+    globIco.className   = 'meta-big-num globus-petat';
+    globTxt.textContent = 'PETAT';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// POPUP CARREPUNTS
+// ═══════════════════════════════════════════════
+function obrirPopupCarrepunts() {
+  document.getElementById('popup-carrepunts').classList.add('visible');
+}
+function tancarPopupCarrepunts() {
+  document.getElementById('popup-carrepunts').classList.remove('visible');
+}
+
+function tancarOverlayMeta() {
+  document.getElementById('overlay-meta').classList.remove('visible');
+  estat.overlayMetaActiu = false;
+  estat.fase    = 'repos';
+  estat.penyaId = null;
+  mostraPanellRepos();
+  resetTeleGrid();
+}
+
+// ═══════════════════════════════════════════════
+// PROPERS + ORDRE
+// ═══════════════════════════════════════════════
+function actualitzaPropers(proximes, ordre) {
+  const total   = ordre ? ordre.length : 0;
+  const baixats = ordre ? ordre.filter(p => parseInt(p.ja_baixat) > 0).length : 0;
+  const fillEl = document.getElementById('progres-fill');
+  const txtEl  = document.getElementById('progres-txt');
+  if (fillEl) fillEl.style.width = (total > 0 ? (baixats / total) * 100 : 0) + '%';
+  if (txtEl)  txtEl.textContent  = `${baixats} / ${total} baixades`;
+}
+
+function actualitzaOrdre(ordre, live) {
+  if (!ordre) return;
+  const cont  = document.getElementById('llista-ordre');
+  const liveId = live && !live.error ? live.penya_id : null;
+  const liveEs = live && (live.estat === '0' || live.estat === 0 || live.estat === '1' || live.estat === 1);
+
+  let html = '';
+  [...ordre]
+    .sort((a, b) => a.ordre_sortida - b.ordre_sortida)
+    .forEach(p => {
+      const esLive = liveEs && liveId == p.id;
+      const baixat = parseInt(p.ja_baixat) > 0 && !esLive;
+      let badge    = '';
+      if (esLive)      badge = '<span class="ordre-badge live">🔴 En Pista</span>';
+      else if (baixat) badge = '<span class="ordre-badge ok">✓</span>';
+      else             badge = '<span class="ordre-badge pendent">pendent</span>';
+
+      html += `<div class="ordre-item ${esLive ? 'en-pista' : ''} ${baixat ? 'completat' : ''}" onclick="obrirModalPenya(${parseInt(p.id)})">
+        <div class="ordre-num">${p.ordre_sortida}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="ordre-nom">${escHtml(p.nom)}</div>
+          <div class="ordre-carreto">${escHtml(p.nom_carreto || '')}</div>
+        </div>
+        ${badge}
+      </div>`;
+    });
+  cont.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+// RANKINGS
+// ═══════════════════════════════════════════════
+function actualitzaRankings(data, carrepuntsData) {
+  if (!data || data.error) return;
+  rankingData = data;
+
+  const medalles = (i) => i === 0 ? 'or' : i === 1 ? 'argent' : i === 2 ? 'bronze' : '';
+
+  const idPerNom = (nom) => {
+    const p = totesPenyes.find(tp => tp.nom === nom);
+    return p ? parseInt(p.id) : null;
+  };
+
+  const vel = (data.vel_millor || []).slice(0, 10);
+  document.getElementById('rnk-velocitat').innerHTML = vel.length
+    ? vel.map((r, i) => {
+        const pid = idPerNom(r.nom);
+        const click = pid ? `onclick="obrirModalPenya(${pid})"` : '';
+        return `<div class="ranking-row" ${click}>
+          <div class="rank-pos ${medalles(i)}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</div>
+          <div class="rank-nom">${escHtml(r.nom)}</div>
+          <div class="rank-val" style="color:var(--c-blue)">${formatTemps(parseInt(r.temps))}</div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--c-muted);font-size:.78rem;padding:8px">Sense dades</div>';
+
+  // Habilitat: banderes (tot o res, 10 o 0) + globus (tot o res, 10 o 0) → màxim 20
+  const hab = (data.habilitat || []).slice(0, 10);
+  document.getElementById('rnk-habilitat').innerHTML = hab.length
+    ? hab.map((r, i) => {
+        const pid = idPerNom(r.nom);
+        const click = pid ? `onclick="obrirModalPenya(${pid})"` : '';
+        const bandIco = parseInt(r.banderes) === 3 ? '🚩' : '—';
+        const globIco = parseInt(r.globus_petat) === 0 ? '🎈' : '💥';
+        return `<div class="ranking-row" ${click}>
+          <div class="rank-pos ${medalles(i)}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</div>
+          <div class="rank-nom">${escHtml(r.nom)}</div>
+          <span style="font-size:.85rem;">${bandIco}${globIco}</span>
+          <div class="rank-val" style="color:var(--c-green)">${r.totals || 0} pts</div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--c-muted);font-size:.78rem;padding:8px">Sense dades</div>';
+
+  const est = (data.estetica || []).slice(0, 10);
+  document.getElementById('rnk-estetica').innerHTML = est.length
+    ? est.map((r, i) => {
+        const pid = idPerNom(r.nom);
+        const click = pid ? `onclick="obrirModalPenya(${pid})"` : '';
+        return `<div class="ranking-row" ${click}>
+          <div class="rank-pos ${medalles(i)}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</div>
+          <div class="rank-nom">${escHtml(r.nom)}</div>
+          <div class="rank-val" style="color:var(--c-purple)">${parseFloat(r.punts||0).toFixed(1)}</div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--c-muted);font-size:.78rem;padding:8px">Sense dades</div>';
+
+  // Carrepunts: classificació final amb total i punts de Festa Major
+  const cp = Array.isArray(carrepuntsData) ? carrepuntsData.slice(0, 10) : [];
+  document.getElementById('rnk-carrepunts').innerHTML = cp.length
+    ? cp.map((r, i) => {
+        const pid = idPerNom(r.nom);
+        const click = pid ? `onclick="obrirModalPenya(${pid})"` : '';
+        const festaBadge = r.punts_festa === 3 ? '🏆' : r.punts_festa === 2 ? '🥈' : '🎗';
+        return `<div class="ranking-row" ${click}>
+          <div class="rank-pos ${medalles(i)}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</div>
+          <div class="rank-nom">${escHtml(r.nom)}</div>
+          <div class="rank-carrepunts">${parseFloat(r.total||0).toFixed(1)}</div>
+          <div class="rank-val" style="color:var(--c-accent2)">${festaBadge} ${r.punts_festa}pt</div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--c-muted);font-size:.78rem;padding:8px">Sense dades</div>';
+
+  if (estat.fase === 'repos') actualitzaReposGrid();
+}
+
+function canviaRanking(tab) {
+  rankingTab = tab;
+  document.querySelectorAll('.ranking-tab').forEach(b => b.classList.remove('actiu'));
+  document.querySelectorAll('.ranking-llista').forEach(l => l.classList.remove('actiu'));
+  const tabEl = document.querySelector(`.ranking-tab[onclick*="${tab}"]`);
+  if (tabEl) tabEl.classList.add('actiu');
+  const llistaEl = document.getElementById(`rnk-${tab}`);
+  if (llistaEl) llistaEl.classList.add('actiu');
+}
+
+// ═══════════════════════════════════════════════
+// PENYES (cerca + modal)
+// ═══════════════════════════════════════════════
+async function carregaPenyes() {
+  const data = await apiCall('getPenyes');
+  if (data && !data.error) {
+    totesPenyes = data;
+    renderCercador('');
+  }
+}
+
+function renderCercador(filtre) {
+  const cont = document.getElementById('llista-cerca');
+  const fil  = filtre.toLowerCase();
+  const res  = fil
+    ? totesPenyes.filter(p =>
+        (p.nom||'').toLowerCase().includes(fil) ||
+        (p.nom_carreto||'').toLowerCase().includes(fil))
+    : totesPenyes;
+
+  cont.innerHTML = res.slice(0, 10).map(p =>
+    `<div class="cerca-item" onclick="obrirModalPenya(${parseInt(p.id)})">
+      <span style="font-size:.95rem">🏎️</span>
+      <div>
+        <div class="cerca-nom">${escHtml(p.nom)}</div>
+        <div class="cerca-carreto">${escHtml(p.nom_carreto || '—')}</div>
+      </div>
+    </div>`
+  ).join('') || '<div style="color:var(--c-muted);font-size:.78rem;padding:6px 8px;">Cap resultat</div>';
+}
+
+function filtraCerca() {
+  renderCercador(document.getElementById('input-cerca').value);
+}
+
+async function obrirModalPenya(id) {
+  const data = await (await fetch(`${API_URL}?action=getPenyaDetall&id=${encodeURIComponent(parseInt(id))}`)).json();
+  if (!data || !data.info || data.error) return;
+  const p = data.info;
+  document.getElementById('modal-nom').textContent     = p.nom || '';
+  document.getElementById('modal-carreto').textContent = `Carretó: ${p.nom_carreto||'—'} · Membres: ${p.membres||'—'}`;
+
+  const curses = (data.curses || []).filter(c => !c.invalida && !c.dnf);
+  const histHtml = curses.length
+    ? curses.map((c, i) => {
+        const bandIcon = parseInt(c.banderes) === 3 ? '🚩🚩🚩' : '✗';
+        return `<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--c-border);font-size:.82rem;align-items:center;">
+          <span style="color:var(--c-muted);font-family:var(--font-head);font-weight:700;min-width:22px;">#${i+1}</span>
+          <span style="font-family:var(--font-head);font-weight:800;">${formatTemps(parseInt(c.temps_total_ms))}</span>
+          <span>${bandIcon}</span>
+          <span>${c.globus_petat?'💥':'🎈'}</span>
+        </div>`;}).join('')
+    : '<div style="color:var(--c-muted);">Sense baixades registrades</div>';
+
+  document.getElementById('modal-cos').innerHTML = `
+    <div class="modal-seccio"><strong>Info Speaker</strong>${escHtml(p.info_speaker || '—')}</div>
+    <div class="modal-seccio"><strong>Historial de Baixades</strong>${histHtml}</div>
+  `;
+  document.getElementById('modal-penya').classList.add('visible');
+}
+
+function tancarModal() {
+  document.getElementById('modal-penya').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════════
+// INFO PENYA ACTIVA
+// ═══════════════════════════════════════════════
+function renderInfoPenya(detall) {
+  const p = detall.info;
+  const memEl = document.getElementById('crono-membres');
+  if (memEl) memEl.textContent = p.membres ? `👤 ${p.membres}` : '';
+  document.getElementById('info-panel-info').innerHTML = `
+    <div>${escHtml(p.info_speaker || '—')}</div>`;
+}
+
+function renderHistorialPenya(detall) {
+  const curses = (detall.curses || []).filter(c => !c.invalida && !c.dnf);
+  if (!curses.length) {
+    document.getElementById('info-panel-historial').innerHTML =
+      '<div style="color:var(--c-muted);font-size:.82rem;padding:4px 0;">Primera baixada d\'aquesta penya 🎉</div>';
+    return;
+  }
+  const millorTemps = Math.min(...curses.map(c => parseInt(c.temps_total_ms)));
+  document.getElementById('info-panel-historial').innerHTML = curses.map((c, i) => {
+    const t       = parseInt(c.temps_total_ms);
+    const isRecord = t === millorTemps;
+    const bandIcon = parseInt(c.banderes) === 3 ? '🚩🚩🚩' : '✗';
+    return `<div class="hist-row">
+      <span class="hist-num">${i+1}</span>
+      <span class="hist-temps" style="${isRecord?'color:var(--c-green)':''}">${formatTemps(t)}</span>
+      <span class="hist-icons">
+        <span style="font-family:var(--font-head);font-weight:700;font-size:.82rem;">${bandIcon}</span>
+        ${c.globus_petat ? '💥' : '🎈'}
+        ${isRecord ? '<span class="hist-badge-rp">🏆</span>' : ''}
+      </span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// HEARTBEAT
+// ═══════════════════════════════════════════════
+function heartbeat() {
+  apiCall('heartbeat', { modul: 'speaker' });
+}
+
+// ── Init ──
+mostraPanellRepos();
+</script>
+</body>
+</html>

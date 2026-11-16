@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carretons - Ranking</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { background-color: #f8f9fa; overscroll-behavior-y: contain; font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif; }
+        body.pending { visibility: hidden; }
+        .navbar-brand { letter-spacing: 1px; }
+        .card-menu { transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; border: none; }
+        .card-menu:active { transform: scale(0.95); }
+
+        /* Colors Custom Admin i Sincronització */
+        .bg-indigo { background-color: #6610f2 !important; color: white; }
+        .bg-teal { background-color: #20c997 !important; color: white; }
+        .bg-slate { background-color: #6c757d !important; color: white; }
+        .bg-orange { background-color: #fd7e14 !important; color: white; }
+
+        .text-indigo { color: #6610f2 !important; }
+        .text-teal { color: #20c997 !important; }
+        .text-slate { color: #6c757d !important; }
+        .text-orange { color: #fd7e14 !important; }
+
+        .nav-link { font-size: 0.85rem; font-weight: 700 !important; display: flex; align-items: center; gap: 5px; }
+        .nav-link i { font-size: 1.1rem; }
+
+        /* Ajustos icones Dashboard */
+        .card-menu i { font-size: 3.5rem; margin-bottom: 0.5rem; }
+</style>
+
+    <script src="/js/common.js"></script>
+</head>
+<body class="pending">
+
+<div id="nav-root"></div>
+
+<div class="container-fluid pb-5">
+<div class="container-fluid py-4 bg-light min-vh-100">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+                <h2 class="fw-bold text-dark mb-0"><i class="bi bi-trophy text-primary"></i> RÀNQUING</h2>
+                <div class="input-group style="max-width: 400px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cerca penya..." onkeyup="filterRankings()">
+                </div>
+            </div>
+
+            <ul class="nav nav-pills nav-fill mb-4 bg-white p-2 rounded shadow-sm border" id="rankTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-vel" onclick="currentRank='vel'">VELOCITAT</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-hab" onclick="currentRank='hab'">HABILITAT</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-est" onclick="currentRank='est'">ESTÈTICA</button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                
+                <div class="tab-pane fade show active" id="tab-vel">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">Classificació per Temps</span>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="toggleVelMode" onchange="renderVelocitat()">
+                                <label class="form-check-label small" for="toggleVelMode">Mostrar tots els intents</label>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="80">Pos.</th>
+                                        <th>Penya</th>
+                                        <th class="text-end">Temps</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="body-vel"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-hab">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 fw-bold">Punts Acumulats (Mocadors + Globus)</div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="80">Pos.</th>
+                                        <th>Penya</th>
+                                        <th class="text-center">🧣</th>
+                                        <th class="text-center">🎈</th>
+                                        <th class="text-end">Total Punts</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="body-hab"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-est">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 fw-bold">Puntuació Mitjana del Jurat</div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="80">Pos.</th>
+                                        <th>Penya</th>
+                                        <th class="text-end">Mitjana Punts</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="body-est"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div> </div>
+    </div>
+</div>
+
+<script>
+let rawData = null;
+let currentRank = 'vel';
+
+async function loadRankings() {
+    rawData = await apiCall('getRankingsFull');
+    renderAll();
+}
+
+function formatMs(ms) {
+    if(!ms) return "-";
+    let m = Math.floor(ms / 60000);
+    let s = Math.floor((ms % 60000) / 1000);
+    let mi = Math.floor((ms % 1000) / 10);
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${mi.toString().padStart(2,'0')}`;
+}
+
+function renderAll() {
+    renderVelocitat();
+    renderHabilitat();
+    renderEstetica();
+}
+
+function renderVelocitat() {
+    const showAll = document.getElementById('toggleVelMode').checked;
+    const data = showAll ? rawData.vel_tots : rawData.vel_millor;
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    
+    let html = '';
+    data.forEach((r, i) => {
+        if(r.nom.toLowerCase().includes(search)) {
+            html += `
+            <tr class="rank-row">
+                <td class="fw-bold">${i+1}</td>
+                <td class="text-primary fw-bold">${r.nom}</td>
+                <td class="text-end font-monospace">${formatMs(r.temps)}</td>
+            </tr>`;
+        }
+    });
+    document.getElementById('body-vel').innerHTML = html;
+}
+
+function renderHabilitat() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    let html = '';
+    rawData.habilitat.forEach((r, i) => {
+        if(r.nom.toLowerCase().includes(search)) {
+            html += `
+            <tr class="rank-row">
+                <td class="fw-bold">${i+1}</td>
+                <td>${r.nom}</td>
+                <td class="text-center">${r.mocadors}</td>
+                <td class="text-center">${r.globus}</td>
+                <td class="text-end fw-bold text-success">${r.totals} pts</td>
+            </tr>`;
+        }
+    });
+    document.getElementById('body-hab').innerHTML = html;
+}
+
+function renderEstetica() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    let html = '';
+    rawData.estetica.forEach((r, i) => {
+        if(r.nom.toLowerCase().includes(search)) {
+            html += `
+            <tr class="rank-row">
+                <td class="fw-bold">${i+1}</td>
+                <td>${r.nom}</td>
+                <td class="text-end fw-bold text-info">${parseFloat(r.punts).toFixed(2)}</td>
+            </tr>`;
+        }
+    });
+    document.getElementById('body-est').innerHTML = html;
+}
+
+function filterRankings() {
+    // Segons el tab actiu, filtrem només la taula visible per rendiment
+    if(currentRank === 'vel') renderVelocitat();
+    if(currentRank === 'hab') renderHabilitat();
+    if(currentRank === 'est') renderEstetica();
+}
+
+// Inicialització
+document.addEventListener('DOMContentLoaded', loadRankings);
+// Refresh automàtic cada 30 segons per si entren dades noves
+setInterval(loadRankings, 30000);
+
+</script>
+
+<style>
+    /* Estil net i clar */
+    body { background-color: #f8f9fa; }
+    .nav-pills .nav-link { 
+        color: #6c757d; 
+        font-weight: 600; 
+        transition: 0.3s;
+    }
+    .nav-pills .nav-link.active { 
+        background-color: #0d6efd; 
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
+    }
+    .rank-row { transition: 0.2s; cursor: default; }
+    .rank-row:hover { background-color: #f1f7ff !important; }
+    .table thead th { 
+        text-transform: uppercase; 
+        font-size: 0.8rem; 
+        letter-spacing: 0.5px; 
+    }
+    .font-monospace { font-family: 'Courier New', monospace; }
+</style>
+
+
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+  <div id="liveToast" class="toast hide shadow-lg" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-bold" id="toastMsg"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+<script src="/js/shell.js"></script>
+
+</body>
+</html>

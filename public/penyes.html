@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carretons - Penyes</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { background-color: #f8f9fa; overscroll-behavior-y: contain; font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif; }
+        body.pending { visibility: hidden; }
+        .navbar-brand { letter-spacing: 1px; }
+        .card-menu { transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; border: none; }
+        .card-menu:active { transform: scale(0.95); }
+
+        /* Colors Custom Admin i Sincronització */
+        .bg-indigo { background-color: #6610f2 !important; color: white; }
+        .bg-teal { background-color: #20c997 !important; color: white; }
+        .bg-slate { background-color: #6c757d !important; color: white; }
+        .bg-orange { background-color: #fd7e14 !important; color: white; }
+
+        .text-indigo { color: #6610f2 !important; }
+        .text-teal { color: #20c997 !important; }
+        .text-slate { color: #6c757d !important; }
+        .text-orange { color: #fd7e14 !important; }
+
+        .nav-link { font-size: 0.85rem; font-weight: 700 !important; display: flex; align-items: center; gap: 5px; }
+        .nav-link i { font-size: 1.1rem; }
+
+        /* Ajustos icones Dashboard */
+        .card-menu i { font-size: 3.5rem; margin-bottom: 0.5rem; }
+</style>
+
+    <script src="/js/common.js"></script>
+</head>
+<body class="pending">
+
+<div id="nav-root"></div>
+
+<div class="container-fluid pb-5">
+<div class="container-fluid py-3">
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <button class="btn btn-primary btn-lg w-100 py-3 shadow-sm fw-bold" onclick="obrirModalNovaPenya()">
+                <i class="bi bi-plus-circle me-2"></i> REGISTRAR NOVA PENYA
+            </button>
+        </div>
+        <div class="col-md-6">
+            <div id="comptadorMembresBox" class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center justify-content-between py-2 px-3">
+                    <div>
+                        <div class="small fw-bold text-uppercase text-muted">Membres totals</div>
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span id="totalMembres" class="fw-bold fs-3">0</span>
+                            <span class="text-muted small">/ 120</span>
+                        </div>
+                    </div>
+                    <div class="position-relative" style="width:56px;height:56px;">
+                        <svg viewBox="0 0 36 36" width="56" height="56">
+                            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e9ecef" stroke-width="3.2"/>
+                            <circle id="cercleProgress" cx="18" cy="18" r="15.9" fill="none"
+                                stroke="#0d6efd" stroke-width="3.2"
+                                stroke-dasharray="0 100" stroke-dashoffset="25"
+                                stroke-linecap="round" style="transition:stroke-dasharray .5s ease,stroke .3s"/>
+                        </svg>
+                        <span id="pctMembres" class="position-absolute top-50 start-50 translate-middle small fw-bold" style="font-size:.65rem">0%</span>
+                    </div>
+                </div>
+                <div id="alertaMembres" class="px-3 pb-2" style="display:none"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+            <span>LLISTAT PARTICIPANTS</span>
+            <span id="comptadorPenyes" class="badge bg-dark">0</span>
+        </div>
+        <div id="llistaPenyes" class="list-group list-group-flush"></div>
+    </div>
+</div>
+
+<!-- MODAL: NOVA / EDITAR PENYA -->
+<div class="modal fade" id="modalPenya" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="modalPenyaTitol">Dades de la Penya</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Nom de la Penya</label>
+                        <input type="text" id="editNom" class="form-control form-control-lg">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Nom del Carretó</label>
+                        <input type="text" id="editNomCarreto" class="form-control form-control-lg">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold small text-uppercase mb-0">Membres de l'equip</label>
+                        <span id="comptadorMembresModal" class="badge bg-secondary">0 membres</span>
+                    </div>
+                    <div id="llistaMembresInputs"></div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="afegirMembreInput()">
+                        <i class="bi bi-plus-circle me-1"></i> Afegir membre
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">Informació per a l'Speaker</label>
+                    <textarea id="editInfo" class="form-control" rows="4" placeholder="Curiositats, d'on venen, com han construït el carretó..."></textarea>
+                </div>
+                <div class="mt-4">
+                    <button class="btn btn-success btn-lg w-100 fw-bold py-3" onclick="guardarPenya()">
+                        <i class="bi bi-save me-2"></i> GUARDAR CANVIS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: VEURE INFORMACIÓ -->
+<div class="modal fade" id="modalVeurePenya" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold" id="viewNomPenya">—</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">Carretó</div>
+                        <div id="viewCarreto" class="fs-6 fw-semibold text-primary">—</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">Ordre de sortida</div>
+                        <div id="viewOrdre" class="fs-6 fw-semibold">—</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted fw-bold text-uppercase mb-1">Membres de l'equip</div>
+                    <div id="viewMembres" class="p-2 bg-light rounded"></div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted fw-bold text-uppercase mb-1">Informació per a l'Speaker</div>
+                    <div id="viewInfo" class="p-2 bg-light rounded" style="white-space:pre-wrap">—</div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tancar</button>
+                <button type="button" class="btn btn-primary fw-bold" onclick="editarDesDeView()">
+                    <i class="bi bi-pencil-square me-1"></i> Editar informació
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── SOBREESCRIU apiCall LOCALMENT per gestionar charset latin1 del servidor ──
+// El servidor retorna JSON en latin1; res.text() el llegeix com UTF-8 i
+// corromp els accents → JSON.parse falla → "Error JSON".
+// Solució: llegir com ArrayBuffer i decodificar explícitament en windows-1252
+// (compatible latin1) amb TextDecoder.
+async function apiCall(action, payload = null) {
+    const options = {
+        method: payload ? 'POST' : 'GET',
+        headers: payload ? { 'Content-Type': 'application/json' } : {}
+    };
+    if (payload) options.body = JSON.stringify(payload);
+    try {
+        const res    = await fetch(`/api?action=${action}`, options);
+        const buffer = await res.arrayBuffer();
+        // Intentem primer UTF-8 (per si el servidor ja envia UTF-8 correctament)
+        let text = new TextDecoder('utf-8').decode(buffer);
+        try {
+            return JSON.parse(text);
+        } catch (_) {}
+        // Si falla, reintenta amb windows-1252 (=latin1 per a caràcters >127)
+        text = new TextDecoder('windows-1252').decode(buffer);
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('apiCall JSON error:', e, '\nResposta raw:', text.substring(0, 300));
+            return { error: 'Error JSON' };
+        }
+    } catch (e) {
+        return { error: 'Error xarxa' };
+    }
+}
+
+// ── CONSTANTS ────────────────────────────────────────────────────────────────
+const LIMIT_MEMBRES = 130;
+const WARN_MEMBRES  = 120;
+
+let _penyesData  = {};
+let _viewPenyaId = null;
+
+document.addEventListener('DOMContentLoaded', loadPenyes);
+
+// ── CÀRREGA ──────────────────────────────────────────────────────────────────
+async function loadPenyes() {
+    const data = await apiCall('getPenyes');
+    if (!Array.isArray(data)) return;
+
+    _penyesData = {};
+    data.forEach(p => { _penyesData[p.id] = p; });
+
+    document.getElementById('comptadorPenyes').innerText = data.length;
+
+    const totalM = data.reduce((sum, p) => sum + membresArray(p.membres || '').length, 0);
+    actualitzarComptadorMembres(totalM);
+
+    document.getElementById('llistaPenyes').innerHTML = data.map(p => {
+        const nMembres = membresArray(p.membres || '').length;
+        return `
+        <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-start border-4 ${p.estat_inspeccio=='APTE'?'border-success':'border-warning'}">
+            <div class="flex-grow-1 pe-2">
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="fw-bold fs-5">${escHtml(p.nom)}</span>
+                    ${p.ordre_sortida ? `<span class="badge bg-dark">#${p.ordre_sortida}</span>` : ''}
+                </div>
+                ${p.nom_carreto ? `<div class="text-primary fw-bold small"><i class="bi bi-car-front"></i> ${escHtml(p.nom_carreto)}</div>` : ''}
+                <div class="mt-1 d-flex align-items-center gap-1 flex-wrap">
+                    <span class="badge ${p.estat_inspeccio=='APTE'?'bg-success':'bg-warning text-dark'} small">${p.estat_inspeccio}</span>
+                    <span class="badge bg-secondary small"><i class="bi bi-people me-1"></i>${nMembres} membres</span>
+                </div>
+            </div>
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-outline-dark btn-lg" title="Veure informació" onclick="veurePenya(${p.id})">
+                    <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-outline-primary btn-lg" title="Editar" onclick="obrirModalPenya(${p.id})">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function membresArray(str) {
+    return str.split('\n').map(s => s.trim()).filter(Boolean);
+}
+function escHtml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── COMPTADOR MEMBRES ────────────────────────────────────────────────────────
+function actualitzarComptadorMembres(total) {
+    const pct   = Math.min(Math.round((total / LIMIT_MEMBRES) * 100), 100);
+    const color = total >= LIMIT_MEMBRES ? '#dc3545' : total >= WARN_MEMBRES ? '#fd7e14' : '#0d6efd';
+
+    document.getElementById('totalMembres').innerText = total;
+    document.getElementById('pctMembres').innerText   = pct + '%';
+
+    const circ = document.getElementById('cercleProgress');
+    circ.setAttribute('stroke-dasharray', pct + ' 100');
+    circ.setAttribute('stroke', color);
+
+    const box   = document.getElementById('alertaMembres');
+    const mbBox = document.getElementById('comptadorMembresBox');
+
+    if (total >= LIMIT_MEMBRES) {
+        box.style.display = '';
+        box.innerHTML = `<div class="alert alert-danger py-1 px-2 mb-0 small fw-bold"><i class="bi bi-x-circle me-1"></i>Límit de ${LIMIT_MEMBRES} membres assolit. No es poden afegir més participants.</div>`;
+        mbBox.classList.add('border','border-danger');
+    } else if (total >= WARN_MEMBRES) {
+        box.style.display = '';
+        box.innerHTML = `<div class="alert alert-warning py-1 px-2 mb-0 small fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>Atenció: ${total} de ${LIMIT_MEMBRES} membres (${LIMIT_MEMBRES - total} restants).</div>`;
+        mbBox.classList.remove('border','border-danger');
+    } else {
+        box.style.display = 'none';
+        mbBox.classList.remove('border','border-danger');
+    }
+}
+
+// ── MEMBRES DINÀMICS ─────────────────────────────────────────────────────────
+function afegirMembreInput(valor = '') {
+    const cont = document.getElementById('llistaMembresInputs');
+    const div  = document.createElement('div');
+    div.className = 'input-group mb-2';
+    div.innerHTML = `
+        <span class="input-group-text text-muted small">${cont.children.length + 1}</span>
+        <input type="text" class="form-control input-membre" placeholder="Nom del membre" oninput="actualitzarComptadorModal()">
+        <button type="button" class="btn btn-outline-danger" onclick="eliminarMembreInput(this)"><i class="bi bi-trash3"></i></button>`;
+    div.querySelector('input').value = valor;
+    cont.appendChild(div);
+    actualitzarComptadorModal();
+}
+
+function eliminarMembreInput(btn) {
+    btn.closest('.input-group').remove();
+    document.querySelectorAll('#llistaMembresInputs .input-group').forEach((el, i) => {
+        el.querySelector('.input-group-text').innerText = i + 1;
+    });
+    actualitzarComptadorModal();
+}
+
+function actualitzarComptadorModal() {
+    const n = document.querySelectorAll('.input-membre').length;
+    document.getElementById('comptadorMembresModal').innerText = n + ' membre' + (n !== 1 ? 's' : '');
+}
+
+function membresString() {
+    return Array.from(document.querySelectorAll('.input-membre'))
+        .map(i => i.value.trim()).filter(Boolean).join('\n');
+}
+
+// ── MODAL EDITAR ─────────────────────────────────────────────────────────────
+function obrirModalNovaPenya() { omplirModalPenya(null, '', '', '', ''); }
+
+function obrirModalPenya(id) {
+    const p = _penyesData[id];
+    if (!p) return;
+    omplirModalPenya(p.id, p.nom || '', p.nom_carreto || '', p.membres || '', p.info_speaker || '');
+}
+
+function omplirModalPenya(id, nom, carreto, membres, info) {
+    document.getElementById('editId').value         = id || '';
+    document.getElementById('editNom').value        = nom;
+    document.getElementById('editNomCarreto').value = carreto;
+    document.getElementById('editInfo').value       = info;
+
+    const cont = document.getElementById('llistaMembresInputs');
+    cont.innerHTML = '';
+    const llista  = membresArray(membres);
+    const inicial = llista.length > 0 ? llista : ['', ''];
+    inicial.forEach(v => afegirMembreInput(v));
+
+    const hdr = document.querySelector('#modalPenya .modal-header');
+    if (!id) {
+        hdr.className = 'modal-header bg-success text-white';
+        document.getElementById('modalPenyaTitol').innerText = "Registrar Nova Penya";
+    } else {
+        hdr.className = 'modal-header bg-primary text-white';
+        document.getElementById('modalPenyaTitol').innerText = "Editar Penya";
+    }
+    new bootstrap.Modal('#modalPenya').show();
+}
+
+async function guardarPenya() {
+    const id     = document.getElementById('editId').value;
+    const action = id ? 'updatePenya' : 'createPenya';
+    const dades  = {
+        id,
+        nom:         document.getElementById('editNom').value,
+        nom_carreto: document.getElementById('editNomCarreto').value,
+        membres:     membresString(),
+        info:        document.getElementById('editInfo').value
+    };
+    if (!dades.nom) return alert("El nom de la penya és obligatori.");
+
+    const res = await apiCall(action, dades);
+    if (res.success) {
+        showToast("Dades guardades correctament", "success");
+        bootstrap.Modal.getInstance(document.getElementById('modalPenya')).hide();
+        loadPenyes();
+    } else {
+        alert("Error: " + (res.error || "No s'han pogut guardar les dades"));
+    }
+}
+
+// ── POPUP VEURE ──────────────────────────────────────────────────────────────
+function veurePenya(id) {
+    const p = _penyesData[id];
+    if (!p) return;
+    _viewPenyaId = id;
+
+    document.getElementById('viewNomPenya').textContent = p.nom || '—';
+    document.getElementById('viewCarreto').textContent  = p.nom_carreto || '—';
+    document.getElementById('viewOrdre').textContent    = p.ordre_sortida ? '#' + p.ordre_sortida : '—';
+    document.getElementById('viewInfo').textContent     = p.info_speaker || '—';
+
+    const llista = membresArray(p.membres || '');
+    document.getElementById('viewMembres').innerHTML = llista.length
+        ? llista.map((m, i) => `<span class="badge bg-secondary me-1 mb-1 fw-normal">${i+1}. ${escHtml(m)}</span>`).join('')
+        : '<span class="text-muted small">Cap membre registrat</span>';
+
+    new bootstrap.Modal('#modalVeurePenya').show();
+}
+
+function editarDesDeView() {
+    if (!_viewPenyaId) return;
+    bootstrap.Modal.getInstance(document.getElementById('modalVeurePenya')).hide();
+    setTimeout(() => obrirModalPenya(_viewPenyaId), 350);
+}
+</script>
+
+<style>
+    .list-group-item { transition: background-color 0.15s ease; }
+    .list-group-item:hover { background-color: #f8f9fa; }
+    #comptadorMembresBox { min-height: 72px; }
+</style>
+
+
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+  <div id="liveToast" class="toast hide shadow-lg" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-bold" id="toastMsg"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+<script src="/js/shell.js"></script>
+
+</body>
+</html>

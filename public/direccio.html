@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carretons - Direccio</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { background-color: #f8f9fa; overscroll-behavior-y: contain; font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif; }
+        body.pending { visibility: hidden; }
+        .navbar-brand { letter-spacing: 1px; }
+        .card-menu { transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; border: none; }
+        .card-menu:active { transform: scale(0.95); }
+
+        /* Colors Custom Admin i Sincronització */
+        .bg-indigo { background-color: #6610f2 !important; color: white; }
+        .bg-teal { background-color: #20c997 !important; color: white; }
+        .bg-slate { background-color: #6c757d !important; color: white; }
+        .bg-orange { background-color: #fd7e14 !important; color: white; }
+
+        .text-indigo { color: #6610f2 !important; }
+        .text-teal { color: #20c997 !important; }
+        .text-slate { color: #6c757d !important; }
+        .text-orange { color: #fd7e14 !important; }
+
+        .nav-link { font-size: 0.85rem; font-weight: 700 !important; display: flex; align-items: center; gap: 5px; }
+        .nav-link i { font-size: 1.1rem; }
+
+        /* Ajustos icones Dashboard */
+        .card-menu i { font-size: 3.5rem; margin-bottom: 0.5rem; }
+</style>
+
+    <script src="/js/common.js"></script>
+</head>
+<body class="pending" data-admin-only="1">
+
+<div id="nav-root"></div>
+
+<div class="container-fluid pb-5">
+<div class="container-fluid py-3">
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 bg-dark text-white overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-4 border-end border-secondary p-3 text-center">
+                            <small class="text-uppercase text-secondary fw-bold">Penya en Pista</small>
+                            <div id="nomPenyaPista" class="h4 mb-0 text-truncate text-warning">---</div>
+                        </div>
+                        <div class="col-8 p-3 text-center">
+                            <div id="cronoVivo" class="display-3 fw-bold" style="font-family: monospace;">00:00.00</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="progressPista" class="progress rounded-0" style="height: 5px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 bg-primary text-white text-center">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <small class="text-uppercase opacity-75 fw-bold">Hora Estimada Final</small>
+                    <div id="horaFinalEstimada" class="display-5 fw-bold">--:--</div>
+                    <small id="txtRestants" class="opacity-75">Queden 0 penyes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+                    ESTAT DE LA PISTA
+                    <span id="pistaBadge" class="badge bg-secondary">---</span>
+                </div>
+                <div class="card-body text-center">
+                    <button id="btnBloqueig" class="btn btn-lg w-100 py-4 mb-3 fw-bold" onclick="toggleBloqueig()">
+                        CARREGANT...
+                    </button>
+                    <button class="btn btn-outline-danger w-100 mb-2" onclick="anularBaixada()">
+                        <i class="fa-solid fa-rotate-left"></i> ANUL·LAR BAIXADA ACTUAL
+                    </button>
+                    <button class="btn btn-warning w-100 fw-bold" onclick="sortejarOrdre()">
+                        <i class="fa-solid fa-shuffle me-2"></i> GENERAR ORDRE SORTIDA
+                    </button>
+                    <div class="mt-3 text-start border-top pt-3">
+                        <small class="fw-bold text-muted d-block mb-2">PROXIMES PENYES:</small>
+                        <div id="llistaProximes" class="small">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-info text-white fw-bold">COMUNICACIÓ SPEAKER</div>
+                <div class="card-body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><button class="btn btn-sm btn-outline-secondary w-100" onclick="sendMsg('Fes temps')">Fes temps</button></div>
+                        <div class="col-6"><button class="btn btn-sm btn-outline-secondary w-100" onclick="sendMsg('Entrevista')">Entrevista</button></div>
+                        <div class="col-6"><button class="btn btn-sm btn-warning w-100 fw-bold" onclick="sendMsg('Baixada imminent!')">IMMINENT</button></div>
+                        <div class="col-6"><button class="btn btn-sm btn-danger w-100 fw-bold" onclick="sendMsg('ACCIDENT A PISTA')">ACCIDENT</button></div>
+                        <div class="col-6"><button class="btn btn-sm btn-dark w-100" onclick="sendMsg('PISTA NETEJA')">NETEJA</button></div>
+                        <div class="col-6"><button class="btn btn-sm btn-info w-100" onclick="sendMsg('Ves més ràpid')">MÉS RITME</button></div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="customMsg" class="form-control" placeholder="Escriu missatge...">
+                        <button class="btn btn-primary" onclick="sendMsg(document.getElementById('customMsg').value)">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold">SISTEMA ONLINE</div>
+                <ul class="list-group list-group-flush" id="llistaConnexions"></ul>
+                <div class="card-footer bg-white small text-muted text-center" id="lastStats">
+                    Mitjana baixada: --s
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 mt-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold">ORDRE DE SORTIDA</div>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th width="80">Pos.</th>
+                                <th>Penya</th>
+                                <th class="text-end">Estat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="taulaOrdre"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let cronoInterval = null;
+let bloqueigActiu = 0;
+let penyaEnPistaId = null;
+
+async function refreshDireccio() {
+    const status = await apiCall('getLiveStatus');
+    const stats = await apiCall('getStatsDireccio');
+    const conn = await apiCall('getConnexions');
+    const proximes = await apiCall('getProximesPenyes');
+    const totesPenyes = await apiCall('getOrdreSortida');
+
+    // 1. GESTIÓ CRONÒMETRE
+    if (status.estat == 0 && status.sortida_ms) {
+        document.getElementById('nomPenyaPista').innerText = status.penya_nom || "---";
+        startCrono(status.sortida_ms);
+        document.querySelector('.progress-bar').style.width = "100%";
+    } else {
+        stopCrono();
+        document.getElementById('nomPenyaPista').innerText = "PISTA LLIURE";
+        document.getElementById('cronoVivo').innerText = "00:00.00";
+        document.querySelector('.progress-bar').style.width = "0%";
+    }
+
+    // 2. ESTAT PISTA I BOTÓ
+    bloqueigActiu = status.bloqueig_direccio;
+    const btn = document.getElementById('btnBloqueig');
+    const badge = document.getElementById('pistaBadge');
+    
+    if (bloqueigActiu == 1) {
+        btn.className = "btn btn-success btn-lg w-100 py-4 mb-3 shadow";
+        btn.innerHTML = "<i class='fa-solid fa-unlock me-2'></i> REOBRIR PISTA";
+        badge.className = "badge bg-danger";
+        badge.innerText = "TANCADA";
+    } else {
+        btn.className = "btn btn-danger btn-lg w-100 py-4 mb-3 shadow";
+        btn.innerHTML = "<i class='fa-solid fa-hand me-2'></i> TANCAR PISTA (EMERGÈNCIA)";
+        badge.className = "badge bg-success";
+        badge.innerText = "OBERTA";
+    }
+    penyaEnPistaId = status.penya_id;
+
+    // 3. PROXIMES PENYES
+    let proxHtml = '';
+    proximes.forEach((p, idx) => {
+        proxHtml += `<div class="d-flex align-items-center mb-1">
+            <span class="badge bg-dark me-2">${idx+1}</span> <strong>${p.nom}</strong>
+        </div>`;
+    });
+    document.getElementById('llistaProximes').innerHTML = proxHtml || 'No queden penyes';
+
+    // 4. PREDICCIÓ FINAL
+    if (stats.mitjana_ms > 0 && stats.penyes_restants > 0) {
+        const msQueFalten = stats.penyes_restants * stats.mitjana_ms;
+        const horaFinal = new Date(Date.now() + msQueFalten);
+        document.getElementById('horaFinalEstimada').innerText = horaFinal.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('txtRestants').innerText = `Falten ${stats.penyes_restants} penyes`;
+        document.getElementById('lastStats').innerText = `Mitjana descens: ${(stats.mitjana_ms/1000).toFixed(1)}s`;
+    }
+
+    // 5. CONNEXIONS
+    let connHtml = '';
+    conn.forEach(c => {
+        const color = c.online == 1 ? 'text-success' : 'text-danger';
+        connHtml += `<li class="list-group-item d-flex justify-content-between align-items-center small">
+            ${c.modul.toUpperCase()} <i class="fa-solid fa-circle ${color}" style="font-size:10px;"></i>
+        </li>`;
+    });
+    document.getElementById('llistaConnexions').innerHTML = connHtml;
+
+    // 6. TAULA ORDRE
+    let tableHtml = '';
+    totesPenyes.sort((a,b) => a.ordre_sortida - b.ordre_sortida).forEach(p => {
+        const baixat = p.ja_baixat > 0;
+        tableHtml += `<tr class="${baixat ? 'table-light opacity-50' : ''}">
+            <td><span class="fw-bold">${p.ordre_sortida}</span></td>
+            <td>${p.nom}</td>
+            <td class="text-end">
+                ${baixat ? '<span class="badge bg-success">COMPLETAT</span>' : '<span class="badge bg-warning text-dark">PENDENT</span>'}
+            </td>
+        </tr>`;
+    });
+    document.getElementById('taulaOrdre').innerHTML = tableHtml;
+}
+
+function startCrono(startTime) {
+    if (cronoInterval) return;
+    cronoInterval = setInterval(() => {
+        const diff = Date.now() - startTime;
+        if (diff < 0) {
+            document.getElementById('cronoVivo').innerText = "PREPARATS...";
+            return;
+        }
+        const min = Math.floor(diff / 60000);
+        const sec = Math.floor((diff % 60000) / 1000);
+        const ms = Math.floor((diff % 1000) / 10);
+        document.getElementById('cronoVivo').innerText = 
+            `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}.${ms.toString().padStart(2,'0')}`;
+    }, 50);
+}
+
+function stopCrono() {
+    if (cronoInterval) {
+        clearInterval(cronoInterval);
+        cronoInterval = null;
+    }
+}
+
+async function toggleBloqueig() {
+    const nouEstat = bloqueigActiu == 1 ? 0 : 1;
+    await apiCall('toggleBloqueig', {estat: nouEstat});
+    refreshDireccio();
+}
+
+async function sendMsg(m) {
+    if(!m) return;
+    await apiCall('enviarMissatgeSpeaker', {missatge: m});
+    if(typeof showToast === 'function') showToast("Missatge enviat", "info");
+    document.getElementById('customMsg').value = '';
+}
+
+async function anularBaixada() {
+    if (!penyaEnPistaId) return alert("No hi ha ningú en pista.");
+    if (confirm("SEGUR? S'anul·larà la baixada actual i la penya haurà de repetir.")) {
+        await apiCall('anularBaixada', {penya_id: penyaEnPistaId});
+        refreshDireccio();
+    }
+}
+
+async function sortejarOrdre() {
+    if(!confirm("Això reordenarà totes les penyes que tenen l'estat APTE. L'ordre actual es perdrà. Vols continuar?")) return;
+    
+    const res = await apiCall('sortejarOrdre');
+    if(res.success) {
+        showToast("Ordre generat aleatòriament", "warning");
+        refreshDireccio();
+    } else {
+        alert("Error en el sorteig");
+    }
+}
+
+setInterval(() => apiCall('heartbeat', {modul: 'direccio'}), 10000);
+setInterval(refreshDireccio, 3000);
+refreshDireccio();
+</script>
+
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+  <div id="liveToast" class="toast hide shadow-lg" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-bold" id="toastMsg"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+<script src="/js/shell.js"></script>
+
+</body>
+</html>

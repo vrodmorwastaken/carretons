@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carretons - Sortida</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { background-color: #f8f9fa; overscroll-behavior-y: contain; font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif; }
+        body.pending { visibility: hidden; }
+        .navbar-brand { letter-spacing: 1px; }
+        .card-menu { transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; border: none; }
+        .card-menu:active { transform: scale(0.95); }
+
+        /* Colors Custom Admin i Sincronització */
+        .bg-indigo { background-color: #6610f2 !important; color: white; }
+        .bg-teal { background-color: #20c997 !important; color: white; }
+        .bg-slate { background-color: #6c757d !important; color: white; }
+        .bg-orange { background-color: #fd7e14 !important; color: white; }
+
+        .text-indigo { color: #6610f2 !important; }
+        .text-teal { color: #20c997 !important; }
+        .text-slate { color: #6c757d !important; }
+        .text-orange { color: #fd7e14 !important; }
+
+        .nav-link { font-size: 0.85rem; font-weight: 700 !important; display: flex; align-items: center; gap: 5px; }
+        .nav-link i { font-size: 1.1rem; }
+
+        /* Ajustos icones Dashboard */
+        .card-menu i { font-size: 3.5rem; margin-bottom: 0.5rem; }
+</style>
+
+    <script src="/js/common.js"></script>
+</head>
+<body class="pending">
+
+<div id="nav-root"></div>
+
+<div class="container-fluid pb-5">
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h2 class="mb-4"><i class="bi bi-flag"></i> Jutge de Sortida</h2>
+        
+        <div id="setupArea" class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div id="statusBadge" class="mb-3"></div>
+                <div id="alertaDireccio" class="alert alert-danger d-none fw-bold mb-4 py-3 shadow-sm">
+                    <i class="bi bi-exclamation-octagon-fill fs-4 d-block mb-2"></i>
+                    PISTA TANCADA PER DIRECCIÓ DE CURSA
+                </div>
+
+                <select id="penyaSelect" class="form-select form-select-lg mb-4 text-center fw-bold border-2">
+                    <option value="">-- Carregant Penyes --</option>
+                </select>
+                <button id="btnLlançar" class="btn btn-success btn-xxl w-100 py-3 fs-3 fw-bold shadow" onclick="iniciarProtocol()">
+                    <i class="bi bi-rocket-takeoff"></i> PREPARAR SORTIDA (10s)
+                </button>
+            </div>
+        </div>
+
+        <div id="countdownArea" class="d-none">
+            <div class="card border-0 shadow-lg p-5 bg-white">
+                <h1 id="cdText" class="fw-bold" style="font-size: 45vw; line-height: 1; user-select: none; touch-action: none; cursor: pointer;">10</h1>
+                <p id="cdStatus" class="lead text-muted mt-3 fw-bold"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-dark text-white p-3 rounded mt-4 text-center shadow">
+    <small class="text-muted d-block text-uppercase fw-bold">Crono Oficial en Pista</small>
+    <div id="miniCrono" class="fw-bold" style="font-family: 'Courier New', monospace; font-size: 3rem;">00:00:00.00</div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let countdownInterval = null;
+    let abortTimer = null;
+
+    // --- Estat per a l'auto-avançament ---
+    let lastEstat      = null;   // 'ocupada' | 'lliure' | null
+    let lastPenyaId    = null;   // id de la penya que ocupava la pista
+    let penyesOrdenades = [];    // cache de penyes aptes ordenades
+    let userHasChanged = false;  // l'operador ha tocat manualment el selector?
+
+    function playSound(freq, duration, type = 'sine') {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc  = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Avança el selector a la penya següent en ordre
+    function autoAdvancePenya(penyaQueAcabaDeSortir) {
+        if (userHasChanged) return; // l'operador ha triat manualment, no sobreescrivim
+
+        const sel = document.getElementById('penyaSelect');
+        if (!penyaQueAcabaDeSortir || penyesOrdenades.length === 0) return;
+
+        const idxActual = penyesOrdenades.findIndex(p => p.id == penyaQueAcabaDeSortir);
+        const seguent   = penyesOrdenades[idxActual + 1];
+
+        if (seguent) {
+            sel.value = seguent.id;
+            showToast(`✅ Següent: ${seguent.nom}`, 'success');
+            playSound(660, 0.15, 'sine');
+        } else {
+            sel.value = '';
+            showToast('🏁 Última penya! No n\'hi ha més en llista.', 'info');
+        }
+    }
+
+    async function checkPistaStatus() {
+        const res = await apiCall('getLiveStatus');
+        const btn      = document.getElementById('btnLlançar');
+        const badge    = document.getElementById('statusBadge');
+        const alertaDir = document.getElementById('alertaDireccio');
+
+        if (res.bloqueig_direccio == 1) {
+            btn.disabled = true;
+            btn.className = "btn btn-secondary btn-xxl w-100 py-3";
+            alertaDir.classList.remove('d-none');
+            badge.classList.add('d-none');
+        } else {
+            alertaDir.classList.add('d-none');
+            badge.classList.remove('d-none');
+
+            const estatActual = (res && (res.estat === 0 || res.estat === 1)) ? 'ocupada' : 'lliure';
+
+            if (estatActual === 'ocupada') {
+                btn.disabled = true;
+                btn.className = "btn btn-secondary btn-xxl w-100 py-3";
+                badge.innerHTML = `<span class="badge bg-danger fs-6 w-100 p-2"><i class="bi bi-cone-striped"></i> PISTA OCUPADA: ${res.penya_nom}</span>`;
+                // Guardem quina penya ocupa la pista ara
+                if (res.penya_id) lastPenyaId = res.penya_id;
+            } else {
+                btn.disabled = false;
+                btn.className = "btn btn-success btn-xxl w-100 py-3";
+                badge.innerHTML = `<span class="badge bg-success fs-6 w-100 p-2"><i class="bi bi-check-circle"></i> PISTA LLIURE</span>`;
+
+                // Transició ocupada → lliure: avança automàticament
+                if (lastEstat === 'ocupada' && lastPenyaId !== null) {
+                    autoAdvancePenya(lastPenyaId);
+                    lastPenyaId = null;
+                }
+            }
+
+            lastEstat = estatActual;
+        }
+
+        updateMiniCronoDisplay(res);
+    }
+
+    function updateMiniCronoDisplay(res) {
+        const mc = document.getElementById('miniCrono');
+        if (res && res.estat == 0) {
+            const startTime = res.sortida_ms + (Date.now() - res.serverMs);
+            if (!window.cronoTick) {
+                window.cronoTick = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    mc.innerText = formatTime(elapsed);
+                    mc.classList.add('text-success');
+                }, 50);
+            }
+        } else {
+            clearInterval(window.cronoTick); window.cronoTick = null;
+            mc.innerText = "00:00:00.00";
+            mc.classList.remove('text-success');
+        }
+    }
+
+    function formatTime(ms) {
+        if (ms < 0) ms = 0;
+        let min  = Math.floor(ms / 60000);
+        let sec  = Math.floor((ms % 60000) / 1000);
+        let mili = Math.floor((ms % 1000) / 10);
+        return `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}.${mili.toString().padStart(2,'0')}`;
+    }
+
+    async function iniciarProtocol() {
+        const sel = document.getElementById('penyaSelect');
+        if (!sel.value) { showToast('Selecciona una penya!', 'warning'); return; }
+
+        const res = await apiCall('launchCarret', { penya_id: sel.value });
+        if (res.error) { showToast(res.error, 'danger'); return; }
+
+        // Resetem el flag manual en iniciar sortida
+        userHasChanged = false;
+
+        document.getElementById('setupArea').classList.add('d-none');
+        document.getElementById('countdownArea').classList.remove('d-none');
+
+        const realTarget = res.targetMs + (Date.now() - res.serverMs);
+        let lastSecond = -1;
+
+        countdownInterval = setInterval(() => {
+            const falta  = realTarget - Date.now();
+            const segons = Math.ceil(falta / 1000);
+            const txt    = document.getElementById('cdText');
+
+            if (falta <= 0) {
+                clearInterval(countdownInterval);
+                txt.innerText  = "GO";
+                txt.style.color = "#198754";
+                playSound(880, 0.8, 'square');
+                setTimeout(() => window.location.reload(), 3000);
+            } else {
+                if (segons !== lastSecond && segons >= 1) {
+                    lastSecond = segons;
+                    txt.innerText  = segons;
+                    txt.style.color = (segons > 5) ? "#dc3545" : "#fd7e14";
+                    playSound(440, 0.1, 'sine');
+                }
+            }
+        }, 30);
+    }
+
+    async function avortarSortida() {
+        clearInterval(countdownInterval);
+        await apiCall('clearPista');
+        playSound(200, 0.5, 'sawtooth');
+        alert("ALERTA: Sortida avortada per seguretat.");
+        window.location.reload();
+    }
+
+    const cdArea = document.getElementById('cdText');
+    const startAbort = (e) => { if (e.type === 'touchstart') e.preventDefault(); abortTimer = setTimeout(avortarSortida, 2000); };
+    const stopAbort  = () => { clearTimeout(abortTimer); };
+    cdArea.addEventListener('mousedown',  startAbort);
+    cdArea.addEventListener('mouseup',    stopAbort);
+    cdArea.addEventListener('mouseleave', stopAbort);
+    cdArea.addEventListener('touchstart', startAbort);
+    cdArea.addEventListener('touchend',   stopAbort);
+
+    async function loadPenyes() {
+        const data = await apiCall('getPenyes');
+        if (!Array.isArray(data)) return;
+        const sel = document.getElementById('penyaSelect');
+        const currentSelected = sel.value;
+
+        // Guardem la llista ordenada per poder navegar-hi
+        penyesOrdenades = data
+            .filter(p => p.estat_inspeccio === 'APTE')
+            .sort((a, b) => (parseInt(a.ordre_sortida) || 999) - (parseInt(b.ordre_sortida) || 999));
+
+        sel.innerHTML = '<option value="">-- Selecciona Penya --</option>';
+        penyesOrdenades.forEach(p => {
+            const prefix = p.ordre_sortida ? `${p.ordre_sortida} - ` : '';
+            sel.innerHTML += `<option value="${p.id}" ${p.id == currentSelected ? 'selected' : ''}>${prefix}${p.nom}</option>`;
+        });
+    }
+
+    // Detectem canvi manual del selector
+    document.getElementById('penyaSelect').addEventListener('change', () => {
+        userHasChanged = true;
+    });
+
+    loadPenyes();
+    setInterval(checkPistaStatus, 1000);
+    setInterval(() => apiCall('heartbeat', { modul: 'sortida' }), 10000);
+</script>
+
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+  <div id="liveToast" class="toast hide shadow-lg" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-bold" id="toastMsg"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+<script src="/js/shell.js"></script>
+
+</body>
+</html>

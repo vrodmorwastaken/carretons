@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carretons - Inspeccio</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { background-color: #f8f9fa; overscroll-behavior-y: contain; font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif; }
+        body.pending { visibility: hidden; }
+        .navbar-brand { letter-spacing: 1px; }
+        .card-menu { transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; border: none; }
+        .card-menu:active { transform: scale(0.95); }
+
+        /* Colors Custom Admin i Sincronització */
+        .bg-indigo { background-color: #6610f2 !important; color: white; }
+        .bg-teal { background-color: #20c997 !important; color: white; }
+        .bg-slate { background-color: #6c757d !important; color: white; }
+        .bg-orange { background-color: #fd7e14 !important; color: white; }
+
+        .text-indigo { color: #6610f2 !important; }
+        .text-teal { color: #20c997 !important; }
+        .text-slate { color: #6c757d !important; }
+        .text-orange { color: #fd7e14 !important; }
+
+        .nav-link { font-size: 0.85rem; font-weight: 700 !important; display: flex; align-items: center; gap: 5px; }
+        .nav-link i { font-size: 1.1rem; }
+
+        /* Ajustos icones Dashboard */
+        .card-menu i { font-size: 3.5rem; margin-bottom: 0.5rem; }
+</style>
+
+    <script src="/js/common.js"></script>
+</head>
+<body class="pending">
+
+<div id="nav-root"></div>
+
+<div class="container-fluid pb-5">
+<div class="row">
+    <div class="col-12 text-center mb-3">
+        <h2><i class="bi bi-clipboard2-check"></i> Inspecció Tècnica</h2>
+        <div class="btn-group w-100 my-2" role="group">
+            <input type="radio" class="btn-check" name="btnradio" id="filtrePendent" autocomplete="off" checked onchange="loadPenyesInspeccio()">
+            <label class="btn btn-outline-warning text-dark fw-bold py-3" for="filtrePendent">PENDENTS</label>
+
+            <input type="radio" class="btn-check" name="btnradio" id="filtreTotes" autocomplete="off" onchange="loadPenyesInspeccio()">
+            <label class="btn btn-outline-primary fw-bold py-3" for="filtreTotes">TOTES</label>
+        </div>
+    </div>
+    
+    <div class="col-12" id="llistaInspeccions">
+        <div class="text-center mt-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-bottom h-100" tabindex="-1" id="checklistOffcanvas">
+  <div class="offcanvas-header bg-dark text-white">
+    <h5 class="offcanvas-title fw-bold" id="nomPenyaInspeccio">Penya</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body pb-5">
+    <input type="hidden" id="inspeccioPenyaId">
+    
+    <div class="alert alert-info fw-bold mb-4">
+        <i class="bi bi-info-circle"></i> Marca totes les caselles per fer la penya APTE per córrer.
+    </div>
+
+    <div class="list-group mb-4 shadow-sm" style="font-size: 1.2rem;">
+        <label class="list-group-item d-flex justify-content-between align-items-center py-3">
+            Construcció pròpia
+            <input class="form-check-input chk-inspeccio" type="checkbox" id="c1" style="transform: scale(1.8);">
+        </label>
+        <label class="list-group-item d-flex justify-content-between align-items-center py-3">
+            No motoritzat
+            <input class="form-check-input chk-inspeccio" type="checkbox" id="c2" style="transform: scale(1.8);">
+        </label>
+        <label class="list-group-item d-flex justify-content-between align-items-center py-3">
+            Mínim 3 rodes
+            <input class="form-check-input chk-inspeccio" type="checkbox" id="c3" style="transform: scale(1.8);">
+        </label>
+        <label class="list-group-item d-flex justify-content-between align-items-center py-3">
+            Té frens
+            <input class="form-check-input chk-inspeccio" type="checkbox" id="c4" style="transform: scale(1.8);">
+        </label>
+        <label class="list-group-item d-flex justify-content-between align-items-center py-3">
+            Té direcció
+            <input class="form-check-input chk-inspeccio" type="checkbox" id="c5" style="transform: scale(1.8);">
+        </label>
+        <label class="list-group-item d-flex justify-content-between align-items-center py-3">
+            Es pot aixecar per 2 persones
+            <input class="form-check-input chk-inspeccio" type="checkbox" id="c6" style="transform: scale(1.8);">
+        </label>
+        <label class="list-group-item d-flex justify-content-between align-items-center py-3 text-danger fw-bold">
+            Sense elements perillosos
+            <input class="form-check-input chk-inspeccio" type="checkbox" id="c7" style="transform: scale(1.8);">
+        </label>
+    </div>
+
+    <button class="btn btn-success btn-xxl w-100" onclick="guardarInspeccio()">
+        <i class="bi bi-save"></i> GUARDAR INSPECCIÓ
+    </button>
+  </div>
+</div>
+
+<script>
+    let bsOffcanvas = null;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        bsOffcanvas = new bootstrap.Offcanvas(document.getElementById('checklistOffcanvas'));
+        loadPenyesInspeccio();
+    });
+
+    async function loadPenyesInspeccio() {
+        const penyes = await apiCall('getPenyes');
+        const nomesPendents = document.getElementById('filtrePendent').checked;
+        
+        let html = '<div class="list-group shadow-sm">';
+        penyes.forEach(p => {
+            if (nomesPendents && p.estat_inspeccio !== 'PENDENT') return;
+            
+            let color = p.estat_inspeccio === 'APTE' ? 'success' : (p.estat_inspeccio === 'PENDENT' ? 'warning text-dark' : 'danger');
+            let icona = p.estat_inspeccio === 'APTE' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill';
+            
+            html += `
+            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3" onclick="obrirInspeccio(${p.id}, '${p.nom.replace(/'/g, "\\'")}')">
+                <span class="fs-4 fw-bold">${p.nom}</span>
+                <span class="badge bg-${color} fs-6"><i class="bi ${icona}"></i> ${p.estat_inspeccio}</span>
+            </button>`;
+        });
+        html += '</div>';
+        
+        if (html === '<div class="list-group shadow-sm"></div>') {
+            html = '<div class="alert alert-success text-center mt-3"><i class="bi bi-emoji-sunglasses fs-1"></i><br>Totes les penyes inspeccionades!</div>';
+        }
+        
+        document.getElementById('llistaInspeccions').innerHTML = html;
+    }
+
+    function obrirInspeccio(id, nom) {
+        document.getElementById('inspeccioPenyaId').value = id;
+        document.getElementById('nomPenyaInspeccio').innerText = "Inspeccionant: " + nom;
+        
+        // Buidar checklist per seguretat (en una app real es carregarien els valors previs via AJAX)
+        document.querySelectorAll('.chk-inspeccio').forEach(chk => chk.checked = false);
+        
+        bsOffcanvas.show();
+    }
+
+    async function guardarInspeccio() {
+        const payload = {
+            penya_id: document.getElementById('inspeccioPenyaId').value,
+            c1: document.getElementById('c1').checked ? 1 : 0,
+            c2: document.getElementById('c2').checked ? 1 : 0,
+            c3: document.getElementById('c3').checked ? 1 : 0,
+            c4: document.getElementById('c4').checked ? 1 : 0,
+            c5: document.getElementById('c5').checked ? 1 : 0,
+            c6: document.getElementById('c6').checked ? 1 : 0,
+            c7: document.getElementById('c7').checked ? 1 : 0
+        };
+
+        const res = await apiCall('setInspeccio', payload);
+        if (res.success) {
+            bsOffcanvas.hide();
+            if (res.apte) {
+                showToast("Vehicul APTE! Ja pot anar a la sortida.", "success");
+            } else {
+                showToast("Inspecció guardada. Encara falten requisits.", "warning");
+            }
+            loadPenyesInspeccio();
+        } else {
+            showToast("Error en guardar", "danger");
+        }
+    }
+</script>
+
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+  <div id="liveToast" class="toast hide shadow-lg" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-bold" id="toastMsg"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+<script src="/js/shell.js"></script>
+
+</body>
+</html>

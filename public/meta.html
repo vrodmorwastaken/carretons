@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carretons - Meta</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { background-color: #f8f9fa; overscroll-behavior-y: contain; font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif; }
+        body.pending { visibility: hidden; }
+        .navbar-brand { letter-spacing: 1px; }
+        .card-menu { transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; border: none; }
+        .card-menu:active { transform: scale(0.95); }
+
+        /* Colors Custom Admin i Sincronització */
+        .bg-indigo { background-color: #6610f2 !important; color: white; }
+        .bg-teal { background-color: #20c997 !important; color: white; }
+        .bg-slate { background-color: #6c757d !important; color: white; }
+        .bg-orange { background-color: #fd7e14 !important; color: white; }
+
+        .text-indigo { color: #6610f2 !important; }
+        .text-teal { color: #20c997 !important; }
+        .text-slate { color: #6c757d !important; }
+        .text-orange { color: #fd7e14 !important; }
+
+        .nav-link { font-size: 0.85rem; font-weight: 700 !important; display: flex; align-items: center; gap: 5px; }
+        .nav-link i { font-size: 1.1rem; }
+
+        /* Ajustos icones Dashboard */
+        .card-menu i { font-size: 3.5rem; margin-bottom: 0.5rem; }
+</style>
+
+    <script src="/js/common.js"></script>
+</head>
+<body class="pending">
+
+<div id="nav-root"></div>
+
+<div class="container-fluid pb-5">
+<!-- ================================================================
+     MOD_DIRECCIO_META.PHP  —  Direcció de Cursa + Línia de Meta
+     v2: switch mode, DNF hold, clavar gran, popup carrepunts
+     ================================================================ -->
+<style>
+:root {
+  --c-bg:      #f0f2f5;
+  --c-surf:    #ffffff;
+  --c-bord:    #e2e5ea;
+  --c-text:    #1a1d23;
+  --c-muted:   #6b7280;
+  --c-pri:     #1d4ed8;
+  --c-pri-l:   #dbeafe;
+  --c-ok:      #16a34a;
+  --c-ok-l:    #dcfce7;
+  --c-red:     #dc2626;
+  --c-red-l:   #fee2e2;
+  --c-yel:     #d97706;
+  --c-yel-l:   #fef3c7;
+  --c-info:    #0891b2;
+  --c-info-l:  #cffafe;
+  --r:         12px;
+  --rsm:       8px;
+  --sh:        0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+  --sh-lg:     0 8px 32px rgba(0,0,0,.14);
+  --mono:      'Courier New', Courier, monospace;
+}
+#dm-root *, #dm-root *::before, #dm-root *::after { box-sizing: border-box; }
+#dm-root {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
+  padding: 10px;
+  min-height: 100vh;
+}
+
+/* ── MODE SWITCH ──────────────────────────────────────────────── */
+.dm-mode-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: var(--c-surf);
+  border: 1px solid var(--c-bord);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+}
+.dm-mode-label {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--c-muted);
+}
+/* Toggle switch */
+.dm-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.dm-toggle-track {
+  width: 56px; height: 28px;
+  border-radius: 14px;
+  background: var(--c-pri);
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.2);
+}
+.dm-toggle-track.meta-mode { background: var(--c-red); }
+.dm-toggle-thumb {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.25);
+  transition: left .2s cubic-bezier(.34,1.56,.64,1);
+}
+.dm-toggle-track.meta-mode .dm-toggle-thumb { left: 31px; }
+.dm-toggle-lbl-dir, .dm-toggle-lbl-meta {
+  font-size: .8rem; font-weight: 700; transition: opacity .15s;
+}
+.dm-toggle-lbl-dir  { color: var(--c-pri); }
+.dm-toggle-lbl-meta { color: var(--c-red); }
+/* Quan és mode meta, dir queda opac i viceversa */
+.dm-mode-bar.is-dir  .dm-toggle-lbl-meta { opacity: .35; }
+.dm-mode-bar.is-meta .dm-toggle-lbl-dir  { opacity: .35; }
+
+.dm-mode-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .65rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: .06em;
+  margin-left: auto;
+}
+.dm-mode-badge.dir  { background: var(--c-pri-l); color: var(--c-pri); }
+.dm-mode-badge.meta { background: var(--c-red-l); color: var(--c-red); }
+.dm-mode-badge .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+.dm-mode-badge.dir .dot  { background: var(--c-pri); }
+.dm-mode-badge.meta .dot { background: var(--c-red); }
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
+
+/* ── GRIDS ────────────────────────────────────────────────────── */
+.dm-dir-grid {
+  display: grid; gap: 10px; grid-template-columns: 1fr;
+  grid-template-areas: "hero" "accions" "speaker" "sistema" "historial" "ordre";
+}
+@media (min-width: 768px) {
+  #dm-root { padding: 14px; }
+  .dm-dir-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas:
+      "hero      hero      hero"
+      "accions   speaker   sistema"
+      "historial historial historial"
+      "ordre     ordre     ordre";
+  }
+}
+.dm-meta-grid {
+  display: grid; gap: 10px; grid-template-columns: 1fr;
+  grid-template-areas: "hero-meta" "accions-meta" "puntuar";
+}
+
+/* ── CARD ─────────────────────────────────────────────────────── */
+.dm-card { background: var(--c-surf); border: 1px solid var(--c-bord); border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; }
+.dm-ch   { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid var(--c-bord); font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--c-muted); background:#fafbfc; }
+.dm-cb   { padding: 14px 16px; }
+
+/* ── HERO / CRONÒMETRE ────────────────────────────────────────── */
+.dm-hero { grid-area: hero; }
+.dm-hero-meta { grid-area: hero-meta; }
+.dm-hero-inner { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: stretch; }
+@media (max-width: 767px) { .dm-hero-inner { grid-template-columns: 1fr; } }
+
+.dm-crono-box {
+  background: var(--c-text); border-radius: var(--r); padding: 16px 20px;
+  color: #fff; display: flex; flex-direction: column; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.dm-crono-penya { font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#9ca3af; margin-bottom:3px; }
+.dm-crono-nom   { font-size:1.05rem; font-weight:700; color:#fbbf24; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px; }
+.dm-crono-val   { font-family:var(--mono); font-size:clamp(2.6rem,7vw,4rem); font-weight:700; line-height:1; }
+.dm-meta-grid .dm-crono-val { font-size: clamp(3.4rem, 11vw, 6rem); }
+.dm-crono-bar      { height:4px; background:#374151; border-radius:2px; margin-top:10px; }
+.dm-crono-bar-fill { height:100%; background:#fbbf24; border-radius:2px; transition:width .5s; }
+
+/* Compte enrere */
+.dm-cd {
+  position:absolute; inset:0; border-radius:var(--r);
+  background:rgba(15,23,42,.94);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:5; animation:fadein .15s ease;
+}
+.dm-cd-num { font-family:var(--mono); font-size:clamp(5rem,18vw,8rem); font-weight:900; color:#fbbf24; line-height:1; animation:cd-pop .35s cubic-bezier(.34,1.56,.64,1); }
+.dm-cd-go  { font-size:clamp(3rem,10vw,5rem); font-weight:900; color:#22c55e; }
+.dm-cd-nom { color:#94a3b8; font-size:.85rem; margin-top:8px; }
+@keyframes cd-pop { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes fadein { from{opacity:0} to{opacity:1} }
+
+/* Predicció */
+.dm-pred { background:var(--c-pri); border-radius:var(--r); padding:16px 18px; color:#fff; display:flex; flex-direction:column; justify-content:center; min-width:145px; text-align:center; }
+.dm-pred-lbl  { font-size:.63rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; opacity:.75; margin-bottom:4px; }
+.dm-pred-hora { font-size:2rem; font-weight:800; line-height:1; }
+.dm-pred-sub  { font-size:.7rem; opacity:.75; margin-top:4px; }
+
+/* ── ACCIONS DIRECCIÓ ─────────────────────────────────────────── */
+.dm-accions { grid-area: accions; }
+
+/* Bloc estat pista */
+.dm-pista-estat {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--rsm);
+  margin-bottom: 10px;
+  font-size: .82rem; font-weight: 700;
+  border: 2px solid transparent;
+  transition: all .2s;
+}
+.dm-pista-estat.oberta  { background: var(--c-ok-l);  border-color: #86efac;  color: var(--c-ok); }
+.dm-pista-estat.tancada { background: var(--c-red-l); border-color: #fca5a5;  color: var(--c-red); animation: estat-blink .8s ease-in-out infinite; }
+@keyframes estat-blink { 0%,100%{opacity:1} 50%{opacity:.65} }
+.dm-pista-estat .dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; animation:pulse-dot 1.4s ease-in-out infinite; }
+.dm-pista-estat.oberta .dot  { background:var(--c-ok); }
+.dm-pista-estat.tancada .dot { background:var(--c-red); }
+
+.dm-btn-pista { width:100%; padding:12px; font-size:.9rem; font-weight:700; border:none; border-radius:var(--rsm); cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.dm-btn-pista.tancar { background:var(--c-red); color:#fff; }
+.dm-btn-pista.obrir  { background:var(--c-ok);  color:#fff; }
+.dm-btn-pista:hover  { filter:brightness(1.08); transform:translateY(-1px); }
+.dm-btn-pista:active { transform:translateY(0); }
+
+/* Separador de seccions */
+.dm-sec-ttl {
+  font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--c-muted); margin: 12px 0 7px; padding-top:10px;
+  border-top:1px solid var(--c-bord);
+}
+
+/* Accions baixada */
+.dm-baixada-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 7px;
+}
+.dm-acc-btn {
+  padding: 10px 8px; font-size: .78rem; font-weight: 700;
+  border-radius: var(--rsm); border: 1.5px solid transparent;
+  cursor: pointer; transition: all .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  text-align: center; line-height: 1.2;
+}
+.dm-acc-btn .dm-acc-ico { font-size: 1.2rem; }
+.dm-acc-btn:hover { transform: translateY(-1px); filter: brightness(.94); }
+.dm-acc-btn:active { transform: translateY(0); }
+
+.btn-anular {
+  background: var(--c-yel-l); color: var(--c-yel); border-color: #fcd34d;
+}
+.btn-dnf-dir {
+  /* DNF en direcció: hold 1s */
+  background: #f1f5f9; color: var(--c-muted); border-color: var(--c-bord);
+  position: relative; overflow: hidden;
+}
+.btn-sorteig {
+  background: #f1f5f9; color: var(--c-text); border-color: var(--c-bord);
+}
+
+/* Info diferència anular vs DNF */
+.dm-acc-info {
+  font-size:.68rem; color:var(--c-muted); margin-top:8px; padding:8px 10px;
+  background:#fafbfc; border-radius:var(--rsm); border:1px solid var(--c-bord);
+  line-height:1.5;
+}
+.dm-acc-info strong { color:var(--c-text); }
+
+.dm-proximes { margin-top:12px; padding-top:12px; border-top:1px solid var(--c-bord); }
+.dm-prox-ttl { font-size:.63rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--c-muted); margin-bottom:7px; }
+.dm-prox-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:.82rem; }
+.dm-prox-num { width:20px;height:20px;border-radius:50%;background:var(--c-text);color:#fff;font-size:.63rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+
+/* ── BOTÓ CLAVAR TEMPS (gran, mode meta) ──────────────────────── */
+.dm-accions-meta { grid-area: accions-meta; }
+.dm-clavar-wrap  { display: flex; flex-direction: column; gap: 10px; }
+
+.dm-btn-clavar {
+  width: 100%;
+  /* Molt gran per ús mòbil */
+  padding: clamp(28px, 8vw, 44px) 20px;
+  background: var(--c-red);
+  color: #fff;
+  border: none;
+  border-radius: var(--r);
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  font-weight: 900;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  box-shadow: 0 6px 24px rgba(220,38,38,.4);
+  text-transform: uppercase;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.dm-btn-clavar:hover  { filter:brightness(1.07); transform:translateY(-2px); box-shadow:0 10px 30px rgba(220,38,38,.5); }
+.dm-btn-clavar:active { transform:translateY(1px); box-shadow:0 2px 8px rgba(220,38,38,.3); }
+.dm-btn-clavar:disabled { background:#9ca3af; box-shadow:none; cursor:not-allowed; transform:none; }
+
+/* ── BOTÓ DNF (hold 1s) ───────────────────────────────────────── */
+.dm-btn-dnf-hold {
+  position: relative; overflow: hidden;
+  padding: 18px 20px;
+  background: #1a1d23;
+  color: #9ca3af;
+  border: 2px solid var(--c-bord);
+  border-radius: var(--r);
+  font-size: .92rem; font-weight: 700;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.dm-btn-dnf-hold .dnf-progress {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: rgba(220,38,38,.18);
+  width: 0%;
+  transition: width linear;
+  pointer-events: none;
+}
+.dm-btn-dnf-hold.holding {
+  border-color: var(--c-red);
+  color: var(--c-red);
+}
+.dm-btn-dnf-hold.holding .dnf-progress { background: rgba(220,38,38,.22); }
+.dm-btn-dnf-hold .dnf-label { position: relative; z-index: 1; }
+
+/* DNF en mode accions-meta: layout costat a costat amb clavar */
+.dm-meta-main-btns {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* ── PANEL PUNTUACIÓ ──────────────────────────────────────────── */
+.dm-puntuar { grid-area: puntuar; }
+.dm-puntuar-body { padding: 16px; }
+.dm-puntuar-header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 14px;
+}
+.dm-puntuar-nom   { font-size: 1rem; font-weight: 800; }
+.dm-puntuar-temps { font-family:var(--mono); font-size:1.4rem; font-weight:700; color:var(--c-pri); background:var(--c-pri-l); padding:4px 12px; border-radius:var(--rsm); }
+
+.dm-bin-group  { margin-bottom: 14px; }
+.dm-bin-label  { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--c-muted); margin-bottom:8px; }
+.dm-bin-btns   { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.dm-bin-btn {
+  padding:14px 10px; border:2px solid var(--c-bord); border-radius:var(--rsm);
+  background:#f8fafc; color:var(--c-muted); font-size:.85rem; font-weight:700;
+  cursor:pointer; transition:all .15s; text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  touch-action: manipulation;
+}
+.dm-bin-btn .dm-bin-icon { font-size:1.4rem; }
+.dm-bin-btn.sel-ok  { background:var(--c-ok-l);  border-color:var(--c-ok);  color:var(--c-ok);  }
+.dm-bin-btn.sel-red { background:var(--c-red-l); border-color:var(--c-red); color:var(--c-red); }
+.dm-bin-btn:hover   { filter:brightness(.96); transform:translateY(-1px); }
+
+.dm-puntuar-footer {
+  display: flex; gap: 8px; align-items: stretch;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--c-bord);
+}
+.dm-btn-finalitzar {
+  flex: 1; padding:14px; background:var(--c-pri); color:#fff;
+  border:none; border-radius:var(--rsm); font-size:1rem; font-weight:800;
+  cursor:pointer; transition:all .15s; letter-spacing:.03em;
+  touch-action: manipulation;
+}
+.dm-btn-finalitzar:hover    { filter:brightness(1.08); transform:translateY(-1px); }
+.dm-btn-finalitzar:disabled { background:#9ca3af; cursor:not-allowed; transform:none; }
+
+/* DNF petit dins panel puntuació */
+.dm-btn-dnf-sm {
+  position: relative; overflow: hidden;
+  padding: 14px 16px; background: #f8fafc;
+  color: var(--c-muted); border: 2px solid var(--c-bord);
+  border-radius: var(--rsm); font-size: .8rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  touch-action: manipulation; user-select: none;
+}
+.dm-btn-dnf-sm .dnf-progress { position:absolute; left:0; top:0; height:100%; background:rgba(220,38,38,.18); width:0%; pointer-events:none; }
+.dm-btn-dnf-sm.holding { border-color:var(--c-red); color:var(--c-red); }
+.dm-btn-dnf-sm .dnf-label { position:relative; z-index:1; }
+
+/* ── SPEAKER ──────────────────────────────────────────────────── */
+.dm-speaker { grid-area: speaker; }
+.dm-spk-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:10px; }
+.dm-spk-btn  { padding:9px 6px; font-size:.74rem; font-weight:600; border-radius:var(--rsm); border:1px solid transparent; cursor:pointer; transition:all .12s; text-align:center; touch-action:manipulation; }
+.dm-spk-btn:hover { transform:translateY(-1px); filter:brightness(.94); }
+.mn { background:#f1f5f9; color:var(--c-text); border-color:var(--c-bord); }
+.mw { background:var(--c-yel-l); color:var(--c-yel); border-color:#fcd34d; }
+.md { background:var(--c-red-l); color:var(--c-red); border-color:#fca5a5; }
+.mk { background:var(--c-text); color:#fff; }
+.mi { background:var(--c-info-l); color:var(--c-info); border-color:#67e8f9; }
+.dm-spk-row  { display:flex; gap:6px; }
+.dm-spk-inp  { flex:1; padding:8px 10px; font-size:.84rem; border:1px solid var(--c-bord); border-radius:var(--rsm); outline:none; transition:border-color .15s; }
+.dm-spk-inp:focus { border-color:var(--c-pri); }
+.dm-spk-send { padding:8px 14px; background:var(--c-pri); color:#fff; border:none; border-radius:var(--rsm); font-weight:600; font-size:.82rem; cursor:pointer; }
+
+/* ── SISTEMA ──────────────────────────────────────────────────── */
+.dm-sistema { grid-area: sistema; }
+.dm-conn-row { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; border-bottom:1px solid var(--c-bord); font-size:.82rem; }
+.dm-conn-row:last-child { border-bottom:none; }
+.dm-conn-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.dm-conn-dot.on  { background:var(--c-ok);  box-shadow:0 0 0 2px var(--c-ok-l); }
+.dm-conn-dot.off { background:#d1d5db; }
+.dm-sys-stats { padding:10px 14px; font-size:.74rem; color:var(--c-muted); border-top:1px solid var(--c-bord); background:#fafbfc; display:flex; justify-content:space-between; }
+
+/* ── HISTORIAL ────────────────────────────────────────────────── */
+.dm-historial { grid-area: historial; }
+.dm-hist-list { max-height: 220px; overflow-y: auto; }
+.dm-hist-row  { display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:1px solid var(--c-bord); font-size:.82rem; cursor:pointer; transition:background .1s; }
+.dm-hist-row:last-child { border-bottom:none; }
+.dm-hist-row:hover { background:#f0f7ff; }
+.dm-hist-pos  { width:24px;height:24px;border-radius:50%;background:var(--c-pri-l);color:var(--c-pri);font-size:.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.dm-hist-nom  { flex:1; font-weight:600; }
+.dm-hist-temps { font-family:var(--mono); font-size:.85rem; font-weight:700; color:var(--c-pri); }
+.dm-hist-badges { display:flex; gap:4px; }
+.dm-hist-badge  { font-size:.6rem; font-weight:700; padding:2px 6px; border-radius:20px; text-transform:uppercase; letter-spacing:.04em; }
+.hb-ok  { background:var(--c-ok-l);  color:var(--c-ok); }
+.hb-red { background:var(--c-red-l); color:var(--c-red); }
+.hb-dnf { background:#f1f5f9; color:var(--c-muted); }
+.dm-hist-empty { padding:18px; text-align:center; color:var(--c-muted); font-size:.82rem; }
+
+/* ── ORDRE SORTIDA ────────────────────────────────────────────── */
+.dm-ordre { grid-area: ordre; }
+.dm-ordre-badge { background:var(--c-pri-l); color:var(--c-pri); font-size:.68rem; font-weight:700; padding:3px 10px; border-radius:20px; }
+.dm-ordre-list  { max-height:400px; overflow-y:auto; }
+.dm-ordre-row   { display:flex; align-items:center; gap:10px; padding:9px 14px; border-bottom:1px solid var(--c-bord); transition:background .1s; user-select:none; }
+.dm-ordre-row:last-child { border-bottom:none; }
+.dm-ordre-row.completat  { opacity:.45; }
+.dm-ordre-row.draggable  { cursor:grab; }
+.dm-ordre-row.drag-active { background:var(--c-pri-l); }
+.dm-ordre-row.drag-over  { background:#eff6ff; border-left:3px solid var(--c-pri); }
+.dm-handle  { color:#d1d5db; font-size:1rem; cursor:grab; padding:0 2px; touch-action:none; flex-shrink:0; }
+.dm-ord-num { width:28px;height:28px;border-radius:50%;background:var(--c-text);color:#fff;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.dm-ord-num.pista { background:var(--c-yel); animation:pulse-num 1s ease-in-out infinite; }
+@keyframes pulse-num { 0%,100%{box-shadow:0 0 0 0 rgba(217,119,6,.4)} 50%{box-shadow:0 0 0 6px rgba(217,119,6,0)} }
+.dm-ord-nom { flex:1; font-size:.88rem; font-weight:600; }
+.dm-ord-st  { font-size:.65rem; font-weight:700; letter-spacing:.05em; padding:3px 8px; border-radius:20px; white-space:nowrap; }
+.st-pendent   { background:var(--c-yel-l); color:var(--c-yel); }
+.st-pista     { background:var(--c-yel);   color:#fff; }
+.st-completat { background:var(--c-ok-l);  color:var(--c-ok); }
+.st-dnf       { background:#f1f5f9;        color:var(--c-muted); text-decoration:line-through; }
+
+/* ── ESPERANT ─────────────────────────────────────────────────── */
+.dm-esperant { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:36px 20px; gap:14px; text-align:center; }
+.dm-esperant-icon { width:52px;height:52px;border-radius:50%;background:var(--c-yel-l);color:var(--c-yel);display:flex;align-items:center;justify-content:center;font-size:1.5rem;animation:esperant-pulse 2s ease-in-out infinite; }
+@keyframes esperant-pulse { 0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(217,119,6,.3)} 50%{transform:scale(1.06);box-shadow:0 0 0 10px rgba(217,119,6,0)} }
+.dm-esperant p { font-size:.9rem; color:var(--c-muted); margin:0; }
+
+/* ── POPUP CARREPUNTS ─────────────────────────────────────────── */
+.dm-popup-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 9995; display: flex; align-items: flex-end;
+  animation: fadein .15s ease;
+}
+@media (min-width: 600px) { .dm-popup-backdrop { align-items: center; } }
+.dm-popup {
+  background: var(--c-surf);
+  border-radius: var(--r) var(--r) 0 0;
+  box-shadow: var(--sh-lg);
+  width: 100%; max-width: 480px;
+  max-height: 88vh; overflow-y: auto;
+  animation: popup-slide .22s cubic-bezier(.34,1.2,.64,1);
+}
+@media (min-width: 600px) { .dm-popup { border-radius: var(--r); margin: auto; } }
+@keyframes popup-slide { from{transform:translateY(40px);opacity:0} to{transform:none;opacity:1} }
+.dm-popup-hd {
+  position: sticky; top: 0;
+  padding: 16px 20px;
+  background: var(--c-text); color: #fff;
+  display: flex; align-items: center; gap: 10px;
+  border-radius: var(--r) var(--r) 0 0;
+}
+@media (min-width: 600px) { .dm-popup-hd { border-radius: var(--r) var(--r) 0 0; } }
+.dm-popup-hd h3 { margin: 0; font-size: 1rem; font-weight: 800; flex: 1; }
+.dm-popup-close { background: none; border: none; color: #9ca3af; font-size: 1.2rem; cursor: pointer; padding: 0 4px; line-height: 1; }
+.dm-popup-close:hover { color: #fff; }
+
+.dm-popup-body { padding: 16px; }
+
+/* Targeta resum penya */
+.dm-cp-penya-card {
+  background: linear-gradient(135deg, #1a1d23, #2d3748);
+  border-radius: var(--r); padding: 16px; color: #fff; margin-bottom: 14px;
+}
+.dm-cp-nom    { font-size: 1.1rem; font-weight: 800; margin-bottom: 2px; }
+.dm-cp-carreto { font-size: .75rem; opacity: .6; margin-bottom: 10px; }
+.dm-cp-pos-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .78rem; font-weight: 700; padding: 4px 12px;
+  border-radius: 20px; margin-bottom: 12px;
+}
+.dm-cp-pos-badge.or     { background: #fef9c3; color: #92400e; }
+.dm-cp-pos-badge.argent { background: #f1f5f9; color: #475569; }
+.dm-cp-pos-badge.bronze { background: #fff7ed; color: #9a3412; }
+.dm-cp-pos-badge.normal { background: rgba(255,255,255,.12); color: #e5e7eb; }
+
+/* Grid de punts */
+.dm-cp-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+}
+.dm-cp-item {
+  background: rgba(255,255,255,.08); border-radius: var(--rsm);
+  padding: 10px 12px; text-align: center;
+}
+.dm-cp-item .lbl { font-size:.6rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; opacity:.6; margin-bottom:4px; }
+.dm-cp-item .val { font-size:1.3rem; font-weight:800; line-height:1; }
+.dm-cp-item .sub { font-size:.65rem; opacity:.55; margin-top:2px; }
+.dm-cp-item.vel  .val { color:#93c5fd; }
+.dm-cp-item.band .val { color:#86efac; }
+.dm-cp-item.glob .val { color:#67e8f9; }
+.dm-cp-item.est  .val { color:#c4b5fd; }
+
+/* Total */
+.dm-cp-total {
+  background: rgba(255,255,255,.12); border-radius: var(--rsm);
+  padding: 12px; text-align: center; margin-bottom: 10px;
+}
+.dm-cp-total .lbl { font-size:.65rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; opacity:.65; }
+.dm-cp-total .val { font-size:2.2rem; font-weight:900; line-height:1; color:#fbbf24; }
+
+/* Punts festa */
+.dm-cp-festa {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--c-surf); border-radius: var(--rsm);
+  border: 1px solid var(--c-bord);
+}
+.dm-cp-festa .lbl { font-size:.75rem; font-weight:700; color:var(--c-muted); }
+.dm-cp-festa .val { font-size:1rem; font-weight:800; }
+.dm-cp-festa-badge {
+  font-size:.75rem; font-weight:800; padding:4px 12px; border-radius:20px;
+}
+.festa-3 { background:#fef3c7; color:#92400e; border:1px solid #fbbf24; }
+.festa-2 { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; }
+.festa-1 { background:#f3f4f6; color:#374151; border:1px solid #e5e7eb; }
+
+/* ── TOAST ────────────────────────────────────────────────────── */
+.dm-toasts { position:fixed; top:14px; right:14px; z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+.dm-toast  { padding:10px 16px; border-radius:var(--rsm); font-size:.82rem; font-weight:600; color:#fff; box-shadow:var(--sh-lg); pointer-events:all; animation:toast-in .2s ease; }
+.t-success { background:var(--c-ok); }
+.t-danger  { background:var(--c-red); }
+.t-info    { background:var(--c-info); }
+.t-warning { background:var(--c-yel); }
+@keyframes toast-in { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+
+/* ── MODAL ────────────────────────────────────────────────────── */
+.dm-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:9990; display:flex; align-items:center; justify-content:center; padding:16px; animation:fadein .15s ease; }
+.dm-modal    { background:#fff; border-radius:var(--r); box-shadow:var(--sh-lg); max-width:420px; width:100%; overflow:hidden; animation:modal-in .18s cubic-bezier(.34,1.56,.64,1); }
+@keyframes modal-in { from{opacity:0;transform:scale(.92)} to{opacity:1;transform:scale(1)} }
+.dm-modal-hd { padding:16px 20px; font-weight:700; font-size:.95rem; border-bottom:1px solid var(--c-bord); display:flex; align-items:center; gap:10px; }
+.dm-modal-bd { padding:16px 20px; font-size:.88rem; color:var(--c-muted); line-height:1.5; }
+.dm-modal-ft { padding:12px 20px; border-top:1px solid var(--c-bord); display:flex; justify-content:flex-end; gap:8px; }
+.dm-mbtn     { padding:8px 18px; font-size:.85rem; font-weight:600; border:none; border-radius:var(--rsm); cursor:pointer; transition:all .12s; touch-action:manipulation; }
+.dm-mbtn:hover { filter:brightness(1.08); }
+.mb-cancel { background:#f1f5f9; color:var(--c-text); }
+.mb-red    { background:var(--c-red); color:#fff; }
+.mb-yel    { background:var(--c-yel); color:#fff; }
+.mb-pri    { background:var(--c-pri); color:#fff; }
+.mb-ok     { background:var(--c-ok);  color:#fff; }
+</style>
+
+<!-- TOAST -->
+<div class="dm-toasts" id="dmToasts"></div>
+<!-- MODAL -->
+<div id="dmBackdrop" style="display:none" class="dm-backdrop" onclick="dmModalClickOutside(event)">
+  <div class="dm-modal">
+    <div class="dm-modal-hd" id="dmModalHd"></div>
+    <div class="dm-modal-bd" id="dmModalBd"></div>
+    <div class="dm-modal-ft" id="dmModalFt"></div>
+  </div>
+</div>
+<!-- POPUP CARREPUNTS -->
+<div id="dmPopupBackdrop" style="display:none" class="dm-popup-backdrop" onclick="dmPopupClickOutside(event)">
+  <div class="dm-popup">
+    <div class="dm-popup-hd">
+      <h3 id="dmPopupTitle">🏆 Carrepunts</h3>
+      <button class="dm-popup-close" onclick="dmPopupClose()">✕</button>
+    </div>
+    <div class="dm-popup-body" id="dmPopupBody"></div>
+  </div>
+</div>
+
+<div id="dm-root">
+
+  <!-- BARRA DE MODE (switch) -->
+  <div class="dm-mode-bar is-dir" id="dmModeBar">
+    <span class="dm-mode-label">Mode:</span>
+    <div class="dm-toggle-wrap" onclick="dmToggleMode()">
+      <span class="dm-toggle-lbl-dir">🎯 Dir.</span>
+      <div class="dm-toggle-track" id="dmToggleTrack">
+        <div class="dm-toggle-thumb"></div>
+      </div>
+      <span class="dm-toggle-lbl-meta">🏁 Meta</span>
+    </div>
+    <span id="dmModeBadge" class="dm-mode-badge dir"><span class="dot"></span> DIRECCIÓ</span>
+  </div>
+
+  <!-- ════ VISTA DIRECCIÓ ════ -->
+  <div id="dmViewDir" class="dm-dir-grid">
+
+    <!-- HERO DIR -->
+    <div class="dm-hero">
+      <div class="dm-hero-inner">
+        <div class="dm-crono-box" id="dmCronoBox">
+          <div class="dm-crono-penya">Penya en pista</div>
+          <div class="dm-crono-nom"  id="dmNomPenya">PISTA LLIURE</div>
+          <div class="dm-crono-val"  id="dmCronoVal">00:00.00</div>
+          <div class="dm-crono-bar"><div class="dm-crono-bar-fill" id="dmCronoFill" style="width:0%"></div></div>
+        </div>
+        <div class="dm-pred">
+          <div class="dm-pred-lbl">Final estimat</div>
+          <div class="dm-pred-hora" id="dmHoraFinal">--:--</div>
+          <div class="dm-pred-sub"  id="dmRestants">Calculant…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCIONS DIR -->
+    <div class="dm-card dm-accions">
+      <div class="dm-ch">
+        Control de Pista
+      </div>
+      <div class="dm-cb">
+        <!-- Estat visual pista -->
+        <div id="dmPistaEstat" class="dm-pista-estat oberta">
+          <span class="dot"></span>
+          <span id="dmPistaEstatTxt">PISTA OBERTA</span>
+        </div>
+        <button id="dmBtnBloqueig" class="dm-btn-pista tancar" onclick="dmConfirmBloqueig()">
+          ✋ TANCAR PISTA (EMERGÈNCIA)
+        </button>
+
+        <!-- Accions baixada -->
+        <div class="dm-sec-ttl">Baixada en curs</div>
+        <div class="dm-baixada-grid">
+          <button class="dm-acc-btn btn-anular" onclick="dmConfirmAnular()">
+            <span class="dm-acc-ico">↩</span>
+            <span>Anul·lar baixada</span>
+          </button>
+          <button class="dm-acc-btn btn-dnf-dir" id="dmDirDnfBtn"
+                  onmousedown="dmDnfHoldStart(this)"
+                  onmouseup="dmDnfHoldEnd(this)"
+                  onmouseleave="dmDnfHoldEnd(this)"
+                  ontouchstart="dmDnfHoldStart(this)"
+                  ontouchend="dmDnfHoldEnd(this)"
+                  ontouchcancel="dmDnfHoldEnd(this)">
+            <div class="dnf-progress" id="dmDirDnfProgress"></div>
+            <span class="dm-acc-ico dnf-label">🚫</span>
+            <span class="dnf-label">DNF</span>
+            <small class="dnf-label" style="font-size:.6rem;opacity:.6">(mantén 1s)</small>
+          </button>
+        </div>
+        <!-- Info diferència -->
+        <div class="dm-acc-info">
+          <strong>↩ Anul·lar:</strong> La penya <em>repeteix</em> la baixada — no queda registrada.<br>
+          <strong>🚫 DNF:</strong> La penya queda <em>fora de classificació</em> de velocitat — registre definitiu.
+        </div>
+
+        <!-- Sorteig -->
+        <div class="dm-sec-ttl">Organització</div>
+        <button class="dm-acc-btn btn-sorteig" style="width:100%;flex-direction:row;justify-content:center;padding:10px;" onclick="dmConfirmSorteig()">
+          🔀 <span>Generar ordre de sortida</span>
+        </button>
+
+        <div class="dm-proximes">
+          <div class="dm-prox-ttl">Pròximes penyes</div>
+          <div id="dmProximes"><span style="color:var(--c-muted);font-size:.8rem">Carregant…</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPEAKER -->
+    <div class="dm-card dm-speaker">
+      <div class="dm-ch">Comunicació Speaker</div>
+      <div class="dm-cb">
+        <div class="dm-spk-grid">
+          <button class="dm-spk-btn mn" onclick="dmSendMsg('Fes temps')">Fes temps</button>
+          <button class="dm-spk-btn mn" onclick="dmSendMsg('Entrevista')">Entrevista</button>
+          <button class="dm-spk-btn mw" onclick="dmSendMsg('Baixada imminent!')">⚡ IMMINENT</button>
+          <button class="dm-spk-btn md" onclick="dmSendMsg('ACCIDENT A PISTA')">🚨 ACCIDENT</button>
+          <button class="dm-spk-btn mk" onclick="dmSendMsg('PISTA NETEJA')">🧹 NETEJA</button>
+          <button class="dm-spk-btn mi" onclick="dmSendMsg('Ves més ràpid')">💨 MÉS RITME</button>
+        </div>
+        <div class="dm-spk-row">
+          <input id="dmCustomMsg" class="dm-spk-inp" type="text" placeholder="Missatge personalitzat…"
+                 onkeydown="if(event.key==='Enter')dmSendMsg(this.value)">
+          <button class="dm-spk-send" onclick="dmSendMsg(document.getElementById('dmCustomMsg').value)">Enviar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SISTEMA -->
+    <div class="dm-card dm-sistema">
+      <div class="dm-ch">Sistema Online</div>
+      <div id="dmConnexions"></div>
+      <div class="dm-sys-stats" id="dmStats">
+        <span>Mitjana: --</span><span>-- pendents</span>
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="dm-card dm-historial">
+      <div class="dm-ch">
+        Últimes Baixades
+        <span id="dmHistBadge" style="background:var(--c-ok-l);color:var(--c-ok);font-size:.68rem;padding:3px 10px;border-radius:20px;font-weight:700;">0 completades</span>
+      </div>
+      <div class="dm-hist-list" id="dmHistList">
+        <div class="dm-hist-empty">Sense baixades completades</div>
+      </div>
+    </div>
+
+    <!-- ORDRE -->
+    <div class="dm-card dm-ordre">
+      <div class="dm-ch">
+        Ordre de Sortida
+        <span class="dm-ordre-badge" id="dmOrdreBadge">0 penyes</span>
+      </div>
+      <div class="dm-ordre-list" id="dmOrdreList"></div>
+    </div>
+
+  </div><!-- /dmViewDir -->
+
+  <!-- ════ VISTA META ════ -->
+  <div id="dmViewMeta" class="dm-meta-grid" style="display:none">
+
+    <!-- HERO META -->
+    <div class="dm-hero-meta">
+      <div class="dm-crono-box" id="dmMetaCronoBox" style="min-height:160px;">
+        <div class="dm-crono-penya">Penya en pista</div>
+        <div class="dm-crono-nom" id="dmMetaNomPenya">PISTA LLIURE</div>
+        <div class="dm-crono-val" id="dmMetaCronoVal">00:00.00</div>
+        <div class="dm-crono-bar"><div class="dm-crono-bar-fill" id="dmMetaCronoFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- ACCIONS META -->
+    <div class="dm-accions-meta" id="dmMetaAccions">
+      <!-- renderitzat dinàmicament -->
+    </div>
+
+    <!-- PANEL PUNTUACIÓ -->
+    <div class="dm-card dm-puntuar" id="dmPuntuar" style="display:none">
+      <div class="dm-ch">🏅 Registrar Resultats</div>
+      <div class="dm-puntuar-body">
+        <div class="dm-puntuar-header">
+          <div class="dm-puntuar-nom"   id="dmPuntNom">---</div>
+          <div class="dm-puntuar-temps" id="dmPuntTemps">00:00.00</div>
+        </div>
+
+        <div class="dm-bin-group">
+          <div class="dm-bin-label">🎈 Globus</div>
+          <div class="dm-bin-btns">
+            <button class="dm-bin-btn sel-ok" id="dmGlobusSi" onclick="dmSelectGlobus(1)">
+              <span class="dm-bin-icon">💧</span>
+              <span>Sencer</span>
+              <small style="font-size:.65rem;opacity:.7">+10 pts</small>
+            </button>
+            <button class="dm-bin-btn" id="dmGlobusNo" onclick="dmSelectGlobus(0)">
+              <span class="dm-bin-icon">💨</span>
+              <span>Petat</span>
+              <small style="font-size:.65rem;opacity:.7">0 pts</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="dm-bin-group">
+          <div class="dm-bin-label">🚩 Banderes</div>
+          <div class="dm-bin-btns">
+            <button class="dm-bin-btn sel-ok" id="dmBanderesSi" onclick="dmSelectBanderes(1)">
+              <span class="dm-bin-icon">✅</span>
+              <span>3 banderes</span>
+              <small style="font-size:.65rem;opacity:.7">+10 pts</small>
+            </button>
+            <button class="dm-bin-btn" id="dmBanderesNo" onclick="dmSelectBanderes(0)">
+              <span class="dm-bin-icon">❌</span>
+              <span>No assolit</span>
+              <small style="font-size:.65rem;opacity:.7">0 pts</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="dm-puntuar-footer">
+          <button class="dm-btn-finalitzar" onclick="dmGuardarHabilitat()" id="dmBtnFinalitzar">
+            ☁ FINALITZAR I GUARDAR
+          </button>
+          <!-- DNF hold petit dins panel puntuació -->
+          <button class="dm-btn-dnf-sm" id="dmPuntDnfBtn"
+                  onmousedown="dmDnfHoldStart(this)"
+                  onmouseup="dmDnfHoldEnd(this)"
+                  onmouseleave="dmDnfHoldEnd(this)"
+                  ontouchstart="dmDnfHoldStart(this)"
+                  ontouchend="dmDnfHoldEnd(this)"
+                  ontouchcancel="dmDnfHoldEnd(this)">
+            <div class="dnf-progress"></div>
+            <span class="dnf-label" style="font-size:1rem;">🚫</span>
+            <span class="dnf-label" style="font-size:.72rem;font-weight:700;">DNF</span>
+            <small class="dnf-label" style="font-size:.58rem;opacity:.6">(mantén 1s)</small>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dmViewMeta -->
+</div><!-- /dm-root -->
+
+<script>
+/* ================================================================
+   MOD_DIRECCIO_META v2 — JS
+   ================================================================ */
+
+const DNF_HOLD_MS = 1000;
+
+let _dmMode         = 'dir';
+let _dmCronoInt     = null;
+let _dmBloqueig     = 0;
+let _dmPenyaId      = null;
+let _dmOrdreData    = [];
+let _dmDragSrc      = null;
+let _dmPenyes       = [];
+let _dmMitjana      = 0;
+let _dmLastSortMs   = null;
+let _dmCdInt        = null;
+let _dmCursaId      = null;
+let _dmGlobus       = 1;
+let _dmBanderes     = 1;
+let _dmHistorial    = [];
+let _dmHiHaviaPerso = false;
+let _dmDnfTimer     = null;
+let _dmDnfRaf       = null;
+
+/* ── TOAST ──────────────────────────────────────────────────────── */
+function dmToast(msg, type='info', ms=2800) {
+  const c = document.getElementById('dmToasts');
+  const t = document.createElement('div');
+  t.className = `dm-toast t-${type}`; t.textContent = msg; c.appendChild(t);
+  setTimeout(() => {
+    t.style.cssText = 'opacity:0;transform:translateX(20px);transition:all .2s';
+    setTimeout(() => t.remove(), 250);
+  }, ms);
+}
+
+/* ── MODAL ──────────────────────────────────────────────────────── */
+function dmModal({ icon='', title, body, confirmLabel, confirmClass='mb-red', onConfirm }) {
+  document.getElementById('dmModalHd').innerHTML = `<span style="font-size:1.2em">${icon}</span> ${title}`;
+  document.getElementById('dmModalBd').innerHTML = body;
+  document.getElementById('dmModalFt').innerHTML =
+    `<button class="dm-mbtn mb-cancel" onclick="dmModalClose()">Cancel·lar</button>
+     <button class="dm-mbtn ${confirmClass}" id="dmModalOk">${confirmLabel}</button>`;
+  document.getElementById('dmModalOk').onclick = () => { dmModalClose(); onConfirm(); };
+  document.getElementById('dmBackdrop').style.display = 'flex';
+}
+function dmModalClose() { document.getElementById('dmBackdrop').style.display = 'none'; }
+function dmModalClickOutside(e) { if (e.target === document.getElementById('dmBackdrop')) dmModalClose(); }
+
+/* ── POPUP CARREPUNTS ───────────────────────────────────────────── */
+async function dmShowCarrepunts(penyaId) {
+  const popup  = document.getElementById('dmPopupBackdrop');
+  const body   = document.getElementById('dmPopupBody');
+  const title  = document.getElementById('dmPopupTitle');
+  body.innerHTML = '<div style="text-align:center;padding:30px;color:var(--c-muted);">Carregant…</div>';
+  popup.style.display = 'flex';
+
+  try {
+    const data = await apiCall('getCarrepuntsPenya', null, `id=${penyaId}`);
+    if (!data || data.error) {
+      body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--c-muted);">No hi ha dades de carrepunts per aquesta penya.</div>';
+      return;
+    }
+
+    title.textContent = `🏆 ${data.nom}`;
+
+    const pos = data.pos_final;
+    const posCls = pos===1?'or': pos===2?'argent': pos===3?'bronze':'normal';
+    const posIco = pos===1?'🥇': pos===2?'🥈': pos===3?'🥉':`#${pos}`;
+    const festaCls = data.punts_festa===3?'festa-3': data.punts_festa===2?'festa-2':'festa-1';
+    const festaIco = data.punts_festa===3?'🏆': data.punts_festa===2?'🥈':'🎗';
+
+    body.innerHTML = `
+      <div class="dm-cp-penya-card">
+        <div class="dm-cp-nom">${escHtml(data.nom)}</div>
+        <div class="dm-cp-carreto">${escHtml(data.nom_carreto||'')}</div>
+        <span class="dm-cp-pos-badge ${posCls}">${posIco} Posició ${pos}a</span>
+        <div class="dm-cp-grid">
+          <div class="dm-cp-item vel">
+            <div class="lbl">⏱ Velocitat</div>
+            <div class="val">${parseFloat(data.pts_velocitat).toFixed(1)}</div>
+            <div class="sub">${dmFmtMs(Number(data.temps_ms))}</div>
+          </div>
+          <div class="dm-cp-item band">
+            <div class="lbl">🚩 Banderes</div>
+            <div class="val">${data.pts_banderes===10?'10':'0'}</div>
+            <div class="sub">${data.pts_banderes===10?'3 banderes ✅':'No assolit ❌'}</div>
+          </div>
+          <div class="dm-cp-item glob">
+            <div class="lbl">🎈 Globus</div>
+            <div class="val">${data.pts_globus===10?'10':'0'}</div>
+            <div class="sub">${data.pts_globus===10?'Sencer 💧':'Petat 💨'}</div>
+          </div>
+          <div class="dm-cp-item est">
+            <div class="lbl">🎨 Estètica</div>
+            <div class="val">${parseFloat(data.pts_estetica||0).toFixed(1)}</div>
+            <div class="sub">Punts jurats</div>
+          </div>
+        </div>
+        <div class="dm-cp-total">
+          <div class="lbl">Total Carrepunts</div>
+          <div class="val">${parseFloat(data.total).toFixed(1)}</div>
+        </div>
+      </div>
+      <div class="dm-cp-festa">
+        <span class="lbl">Punts Festa Major</span>
+        <span class="dm-cp-festa-badge ${festaCls}">${festaIco} ${data.punts_festa} pt${data.punts_festa!==1?'s':''}</span>
+      </div>`;
+  } catch(e) {
+    body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--c-muted);">Error carregant les dades.</div>';
+  }
+}
+
+function dmPopupClose() { document.getElementById('dmPopupBackdrop').style.display = 'none'; }
+function dmPopupClickOutside(e) {
+  if (e.target === document.getElementById('dmPopupBackdrop')) dmPopupClose();
+}
+
+/* ── MODE SWITCH ────────────────────────────────────────────────── */
+function dmToggleMode() {
+  dmSetMode(_dmMode === 'dir' ? 'meta' : 'dir');
+}
+
+function dmSetMode(mode, auto = false) {
+  _dmMode = mode;
+  const isDir  = mode === 'dir';
+  document.getElementById('dmViewDir').style.display  = isDir ? '' : 'none';
+  document.getElementById('dmViewMeta').style.display = isDir ? 'none' : '';
+
+  const track = document.getElementById('dmToggleTrack');
+  const bar   = document.getElementById('dmModeBar');
+  const badge = document.getElementById('dmModeBadge');
+
+  if (isDir) {
+    track.classList.remove('meta-mode');
+    bar.classList.replace('is-meta', 'is-dir');
+    badge.className = 'dm-mode-badge dir';
+    badge.innerHTML = '<span class="dot"></span> DIRECCIÓ';
+  } else {
+    track.classList.add('meta-mode');
+    bar.className = bar.className.replace('is-dir','') + ' is-meta';
+    badge.className = 'dm-mode-badge meta';
+    badge.innerHTML = '<span class="dot"></span> META';
+    dmSyncMetaCrono();
+  }
+  if (auto) dmToast('Mode META activat automàticament', 'warning');
+}
+
+function dmSyncMetaCrono() {
+  document.getElementById('dmMetaCronoVal').textContent  = document.getElementById('dmCronoVal').textContent;
+  document.getElementById('dmMetaNomPenya').textContent  = document.getElementById('dmNomPenya').textContent;
+  document.getElementById('dmMetaCronoFill').style.width = document.getElementById('dmCronoFill').style.width;
+}
+
+/* ── REFRESH ────────────────────────────────────────────────────── */
+async function dmRefresh() {
+  try {
+    const [st, stats, conn, prox, ordre] = await Promise.all([
+      apiCall('getLiveStatus'),
+      apiCall('getStatsDireccio'),
+      apiCall('getConnexions'),
+      apiCall('getProximesPenyes'),
+      apiCall('getOrdreSortida'),
+    ]);
+
+    // Nova baixada detectada → mode meta + vibració
+    if (st.estat == 0 && st.sortida_ms && st.penya_id !== _dmPenyaId && st.penya_id) {
+      if (_dmMode === 'dir') dmSetMode('meta', true);
+      if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+    }
+
+    // Fi de baixada → refrescar historial
+    if ((!st.penya_id || st.estat != 0) && _dmHiHaviaPerso) {
+      dmRefreshHistorial();
+    }
+    _dmHiHaviaPerso = (st.estat == 0 && !!st.penya_id);
+
+    dmUpdateCrono(st);
+    dmUpdatePistaBadge(st);
+    dmUpdatePrediccio(stats);
+    dmUpdateConnexions(conn, stats);
+    dmUpdateProximes(prox);
+    dmUpdateOrdre(ordre, st);
+    dmUpdateMetaAccions(st);
+
+    // Recuperació: temps clavat pendent de puntuació
+    if (st.estat == 1 && st.cursa_id && document.getElementById('dmPuntuar').style.display === 'none') {
+      dmRecuperarPuntuacio(st);
+    }
+  } catch(e) { console.error('dmRefresh', e); }
+}
+
+/* ── CRONÒMETRE ─────────────────────────────────────────────────── */
+function dmUpdateCrono(st) {
+  if (st.estat == 0 && st.sortida_ms) {
+    const sortMs = Number(st.sortida_ms);
+    _dmPenyaId = st.penya_id;
+    document.getElementById('dmNomPenya').textContent  = st.penya_nom || '---';
+    document.getElementById('dmCronoFill').style.width = '100%';
+    if (Date.now() < sortMs) dmStartCD(sortMs, st.penya_nom);
+    if (!_dmCronoInt) {
+      _dmCronoInt = setInterval(() => {
+        const val = dmFmtMs(Math.max(0, Date.now() - sortMs));
+        document.getElementById('dmCronoVal').textContent = val;
+        if (_dmMode === 'meta') {
+          document.getElementById('dmMetaCronoVal').textContent  = val;
+          document.getElementById('dmMetaNomPenya').textContent  = st.penya_nom || '---';
+          document.getElementById('dmMetaCronoFill').style.width = '100%';
+        }
+      }, 50);
+    }
+  } else {
+    clearInterval(_dmCronoInt); _dmCronoInt = null;
+    ['dmCronoVal','dmMetaCronoVal'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='00:00.00'; });
+    ['dmNomPenya','dmMetaNomPenya'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='PISTA LLIURE'; });
+    ['dmCronoFill','dmMetaCronoFill'].forEach(id => { const el=document.getElementById(id); if(el) el.style.width='0%'; });
+    _dmPenyaId = null; _dmLastSortMs = null;
+  }
+}
+
+function dmFmtMs(ms) {
+  const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000), cs=Math.floor((ms%1000)/10);
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
+}
+
+/* ── COMPTE ENRERE ──────────────────────────────────────────────── */
+function dmStartCD(sortMs, nom) {
+  if (_dmLastSortMs === sortMs) return;
+  _dmLastSortMs = sortMs;
+  if (_dmCdInt) { clearInterval(_dmCdInt); _dmCdInt = null; }
+
+  const boxes = [
+    document.getElementById('dmCronoBox'),
+    document.getElementById('dmMetaCronoBox'),
+  ].filter(Boolean);
+
+  let lastN = -1;
+  function tick() {
+    const rem = Math.ceil((sortMs - Date.now()) / 1000);
+    if (rem <= 0) {
+      boxes.forEach(b => { const el = b.querySelector('.dm-cd'); if(el) el.remove(); });
+      clearInterval(_dmCdInt); _dmCdInt = null;
+      return;
+    }
+    if (rem !== lastN) {
+      lastN = rem;
+      boxes.forEach(b => {
+        let el = b.querySelector('.dm-cd');
+        if (!el) { el = document.createElement('div'); el.className = 'dm-cd'; b.appendChild(el); }
+        el.innerHTML = `<div class="dm-cd-num">${rem}</div><div class="dm-cd-nom">${nom||''}</div>`;
+      });
+    }
+  }
+  tick(); _dmCdInt = setInterval(tick, 100);
+}
+
+/* ── PISTA BADGE ────────────────────────────────────────────────── */
+function dmUpdatePistaBadge(st) {
+  _dmBloqueig = st.bloqueig_direccio;
+  const btn    = document.getElementById('dmBtnBloqueig');
+  const estat  = document.getElementById('dmPistaEstat');
+  const estatTxt = document.getElementById('dmPistaEstatTxt');
+  if (_dmBloqueig == 1) {
+    btn.className = 'dm-btn-pista obrir'; btn.innerHTML = '🔓 REOBRIR PISTA';
+    estat.className = 'dm-pista-estat tancada'; estatTxt.textContent = 'PISTA TANCADA';
+  } else {
+    btn.className = 'dm-btn-pista tancar'; btn.innerHTML = '✋ TANCAR PISTA (EMERGÈNCIA)';
+    estat.className = 'dm-pista-estat oberta'; estatTxt.textContent = 'PISTA OBERTA';
+  }
+}
+
+/* ── PREDICCIÓ ──────────────────────────────────────────────────── */
+function dmUpdatePrediccio(stats) {
+  _dmMitjana = stats.mitjana_ms || 0;
+  if (_dmMitjana > 0 && stats.penyes_restants > 0) {
+    const hf = new Date(Date.now() + stats.penyes_restants * _dmMitjana);
+    document.getElementById('dmHoraFinal').textContent = hf.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('dmRestants').textContent  = `Falten ${stats.penyes_restants} penyes`;
+  } else {
+    document.getElementById('dmHoraFinal').textContent = '--:--';
+    document.getElementById('dmRestants').textContent  = 'Sense dades';
+  }
+}
+
+/* ── CONNEXIONS ─────────────────────────────────────────────────── */
+function dmUpdateConnexions(conn, stats) {
+  document.getElementById('dmConnexions').innerHTML = conn.map(c =>
+    `<div class="dm-conn-row"><span style="font-size:.82rem;font-weight:600">${c.modul.toUpperCase()}</span><span class="dm-conn-dot ${c.online==1?'on':'off'}"></span></div>`
+  ).join('');
+  const m = _dmMitjana ? `${(_dmMitjana/1000).toFixed(1)}s` : '--';
+  document.getElementById('dmStats').innerHTML =
+    `<span>Mitjana: ${m}</span><span>${stats.penyes_restants||'--'} pendents</span>`;
+}
+
+/* ── PRÒXIMES ───────────────────────────────────────────────────── */
+function dmUpdateProximes(prox) {
+  document.getElementById('dmProximes').innerHTML = prox?.length
+    ? prox.map((p,i) => `<div class="dm-prox-row"><span class="dm-prox-num">${i+1}</span><strong style="font-size:.84rem">${p.nom}</strong></div>`).join('')
+    : '<span style="color:var(--c-muted);font-size:.8rem">No queden penyes</span>';
+}
+
+/* ── HISTORIAL ──────────────────────────────────────────────────── */
+async function dmRefreshHistorial() {
+  try {
+    const hist = await apiCall('getHistorialBaixades');
+    if (!hist?.length) return;
+    _dmHistorial = hist;
+    dmRenderHistorial();
+  } catch(e) {}
+}
+
+function dmRenderHistorial() {
+  const done = _dmHistorial.filter(x => x.temps_ms || x.dnf).length;
+  document.getElementById('dmHistBadge').textContent = `${done} completades`;
+  const list = document.getElementById('dmHistList');
+  if (!done) { list.innerHTML = '<div class="dm-hist-empty">Sense baixades completades</div>'; return; }
+
+  list.innerHTML = _dmHistorial
+    .filter(x => x.temps_ms || x.dnf)
+    .slice(-8).reverse()
+    .map(x => {
+      const badges = x.dnf
+        ? ['<span class="dm-hist-badge hb-dnf">DNF</span>']
+        : [
+            x.globus_sencer==1 ? '<span class="dm-hist-badge hb-ok">🎈</span>' : '<span class="dm-hist-badge hb-red">💨</span>',
+            x.banderes_ok==1   ? '<span class="dm-hist-badge hb-ok">🚩×3</span>' : '<span class="dm-hist-badge hb-red">🚩✗</span>',
+          ];
+      return `<div class="dm-hist-row" onclick="dmShowCarrepunts(${x.penya_id})" title="Veure carrepunts">
+        <span class="dm-hist-pos">${x.ordre_sortida||'—'}</span>
+        <span class="dm-hist-nom">${x.nom}</span>
+        <span class="dm-hist-temps">${x.dnf?'DNF':dmFmtMs(Number(x.temps_ms))}</span>
+        <span class="dm-hist-badges">${badges.join('')}</span>
+      </div>`;
+    }).join('');
+}
+
+/* ── ORDRE D&D ──────────────────────────────────────────────────── */
+function dmUpdateOrdre(penyes, st) {
+  _dmPenyes = penyes;
+  penyes.sort((a,b) => a.ordre_sortida - b.ordre_sortida);
+  _dmOrdreData = penyes;
+  document.getElementById('dmOrdreBadge').textContent = `${penyes.length} penyes`;
+  const list = document.getElementById('dmOrdreList');
+  list.innerHTML = '';
+  penyes.forEach((p, idx) => {
+    const enPista  = st.penya_id == p.id && st.estat == 0 && st.sortida_ms;
+    const completat= p.ja_baixat > 0;
+    const row = document.createElement('div');
+    row.className = 'dm-ordre-row' + (completat ? ' completat' : ' draggable');
+    row.dataset.idx = idx; row.dataset.id = p.id;
+
+    let stHtml;
+    if (enPista)        stHtml = '<span class="dm-ord-st st-pista">EN PISTA</span>';
+    else if (completat) stHtml = '<span class="dm-ord-st st-completat">✓ FET</span>';
+    else                stHtml = '<span class="dm-ord-st st-pendent">PENDENT</span>';
+
+    const handleHtml = completat ? '<span style="width:20px;flex-shrink:0"></span>' : '<span class="dm-handle">⠿</span>';
+    row.innerHTML = `${handleHtml}<span class="${enPista?'dm-ord-num pista':'dm-ord-num'}">${p.ordre_sortida}</span><span class="dm-ord-nom">${p.nom}</span>${stHtml}`;
+
+    if (!completat) {
+      row.draggable = true;
+      row.addEventListener('dragstart', e => { _dmDragSrc=+e.currentTarget.dataset.idx; e.currentTarget.classList.add('drag-active'); e.dataTransfer.effectAllowed='move'; });
+      row.addEventListener('dragover',  e => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); });
+      row.addEventListener('dragleave', e => e.currentTarget.classList.remove('drag-over'));
+      row.addEventListener('dragend',   e => e.currentTarget.classList.remove('drag-active'));
+      row.addEventListener('drop',      dmDragDrop);
+      dmAddTouchDrag(row);
+    }
+    list.appendChild(row);
+  });
+}
+
+function dmDragDrop(e) {
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  const dstIdx = +e.currentTarget.dataset.idx;
+  if (_dmDragSrc === null || _dmDragSrc === dstIdx) return;
+  const src = _dmOrdreData[_dmDragSrc], dst = _dmOrdreData[dstIdx];
+  _dmDragSrc = null;
+  dmModal({
+    icon: '🔀', title: 'Canviar ordre de sortida',
+    body: `Mou <strong>${src.nom}</strong> a la posició <strong>${dst.ordre_sortida}</strong> (on hi ha <strong>${dst.nom}</strong>).<br><small style="color:var(--c-muted)">L'ordre s'actualitzarà immediatament.</small>`,
+    confirmLabel: 'Confirmar canvi', confirmClass: 'mb-pri',
+    onConfirm: async () => {
+      try { await apiCall('updateOrdreManual',{penya_id:src.id,nou_ordre:dst.ordre_sortida}); dmToast(`${src.nom} → pos. ${dst.ordre_sortida}`,'success'); dmRefresh(); }
+      catch { dmToast('Error actualitzant ordre','danger'); }
+    }
+  });
+}
+
+function dmAddTouchDrag(row) {
+  let startY, clone, origIdx;
+  row.addEventListener('touchstart', e => {
+    origIdx=+row.dataset.idx; startY=e.touches[0].clientY;
+    clone=row.cloneNode(true);
+    clone.style.cssText=`position:fixed;left:${row.getBoundingClientRect().left}px;width:${row.offsetWidth}px;opacity:.85;z-index:9999;pointer-events:none;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18);border-radius:8px;top:${row.getBoundingClientRect().top}px;`;
+    document.body.appendChild(clone); row.classList.add('drag-active');
+  },{passive:true});
+  row.addEventListener('touchmove', e => {
+    e.preventDefault();
+    clone.style.top=(row.getBoundingClientRect().top+(e.touches[0].clientY-startY))+'px';
+    document.querySelectorAll('.dm-ordre-row').forEach(r=>r.classList.remove('drag-over'));
+    document.elementFromPoint(e.touches[0].clientX,e.touches[0].clientY)?.closest('.dm-ordre-row')?.classList.add('drag-over');
+  },{passive:false});
+  row.addEventListener('touchend', e => {
+    clone.remove(); row.classList.remove('drag-active');
+    document.querySelectorAll('.dm-ordre-row').forEach(r=>r.classList.remove('drag-over'));
+    const target=document.elementFromPoint(e.changedTouches[0].clientX,e.changedTouches[0].clientY)?.closest('.dm-ordre-row');
+    if(!target||target===row) return;
+    const dstIdx=+target.dataset.idx; if(dstIdx===origIdx) return;
+    const src=_dmOrdreData[origIdx], dst=_dmOrdreData[dstIdx];
+    dmModal({
+      icon:'🔀', title:'Canviar ordre de sortida',
+      body:`Mou <strong>${src.nom}</strong> a la posició <strong>${dst.ordre_sortida}</strong> (on hi ha <strong>${dst.nom}</strong>).<br><small style="color:var(--c-muted)">L'ordre s'actualitzarà immediatament.</small>`,
+      confirmLabel:'Confirmar canvi', confirmClass:'mb-pri',
+      onConfirm: async () => {
+        try { await apiCall('updateOrdreManual',{penya_id:src.id,nou_ordre:dst.ordre_sortida}); dmToast(`${src.nom} → pos. ${dst.ordre_sortida}`,'success'); dmRefresh(); }
+        catch { dmToast('Error actualitzant ordre','danger'); }
+      }
+    });
+  });
+}
+
+/* ── DNF HOLD ───────────────────────────────────────────────────── */
+function dmDnfHoldStart(btn) {
+  if (_dmDnfTimer) return;
+  btn.classList.add('holding');
+  const progressEl = btn.querySelector('.dnf-progress');
+  const start = Date.now();
+  progressEl.style.transition = 'none';
+  progressEl.style.width = '0%';
+
+  function tick() {
+    const pct = Math.min(100, ((Date.now() - start) / DNF_HOLD_MS) * 100);
+    progressEl.style.width = pct + '%';
+    if (pct < 100) {
+      _dmDnfRaf = requestAnimationFrame(tick);
+    } else {
+      // Activar DNF
+      dmDnfHoldEnd(btn);
+      if (navigator.vibrate) navigator.vibrate([60, 40, 200]);
+      dmConfirmDNF();
+    }
+  }
+  _dmDnfRaf = requestAnimationFrame(tick);
+}
+
+function dmDnfHoldEnd(btn) {
+  if (_dmDnfRaf) { cancelAnimationFrame(_dmDnfRaf); _dmDnfRaf = null; }
+  if (_dmDnfTimer) { clearTimeout(_dmDnfTimer); _dmDnfTimer = null; }
+  btn.classList.remove('holding');
+  const progressEl = btn.querySelector('.dnf-progress');
+  if (progressEl) { progressEl.style.transition = 'width .2s'; progressEl.style.width = '0%'; }
+}
+
+/* ── VISTA META: accions dinàmiques ─────────────────────────────── */
+function dmUpdateMetaAccions(st) {
+  const container  = document.getElementById('dmMetaAccions');
+  const puntuarPanel = document.getElementById('dmPuntuar');
+  if (puntuarPanel.style.display !== 'none') return;
+
+  if (st.estat == 0 && st.sortida_ms && st.penya_id) {
+    container.innerHTML = `
+      <div class="dm-meta-main-btns">
+        <button class="dm-btn-clavar" onclick="dmClavarTemps()">
+          🏁 CLAVAR TEMPS
+        </button>
+        <button class="dm-btn-dnf-hold" id="dmMetaDnfBtn"
+                onmousedown="dmDnfHoldStart(this)"
+                onmouseup="dmDnfHoldEnd(this)"
+                onmouseleave="dmDnfHoldEnd(this)"
+                ontouchstart="dmDnfHoldStart(this)"
+                ontouchend="dmDnfHoldEnd(this)"
+                ontouchcancel="dmDnfHoldEnd(this)">
+          <div class="dnf-progress"></div>
+          <span class="dnf-label" style="font-size:1.3rem">🚫</span>
+          <span class="dnf-label">DNF</span>
+          <small class="dnf-label" style="font-size:.62rem;opacity:.55">(mantén 1s)</small>
+        </button>
+      </div>`;
+  } else {
+    container.innerHTML = `
+      <div class="dm-card">
+        <div class="dm-esperant">
+          <div class="dm-esperant-icon">⏳</div>
+          <strong>Esperant carretó en pista…</strong>
+          <p>El botó CLAVAR TEMPS apareixerà quan comenci una baixada.</p>
+        </div>
+      </div>`;
+  }
+}
+
+/* ── CLAVAR TEMPS ───────────────────────────────────────────────── */
+async function dmClavarTemps() {
+  if (!_dmPenyaId) { dmToast('No hi ha ningú en pista','warning'); return; }
+  if (navigator.vibrate) navigator.vibrate([200, 50]);
+  try {
+    const res = await apiCall('finishCarret');
+    if (res.success) {
+      _dmCursaId = res.cursa_id;
+      dmToast('Temps clavat!', 'success');
+      const st = await apiCall('getLiveStatus');
+      dmRecuperarPuntuacio(st);
+    } else { dmToast(res.error || 'Error clavant temps', 'danger'); }
+  } catch { dmToast('Error clavant temps', 'danger'); }
+}
+
+function dmRecuperarPuntuacio(st) {
+  if (!st?.cursa_id) return;
+  _dmCursaId = st.cursa_id;
+  if (_dmMode !== 'meta') dmSetMode('meta');
+  document.getElementById('dmMetaAccions').innerHTML = '';
+  const panel = document.getElementById('dmPuntuar');
+  panel.style.display = '';
+  document.getElementById('dmPuntNom').textContent   = st.penya_nom || '---';
+  document.getElementById('dmPuntTemps').textContent = dmFmtMs(Number(st.temps_fixat || 0));
+  _dmGlobus = 1; _dmBanderes = 1;
+  dmSelectGlobus(1); dmSelectBanderes(1);
+}
+
+/* ── PUNTUACIÓ ──────────────────────────────────────────────────── */
+function dmSelectGlobus(val) {
+  _dmGlobus = val;
+  document.getElementById('dmGlobusSi').className = 'dm-bin-btn' + (val==1 ? ' sel-ok'  : '');
+  document.getElementById('dmGlobusNo').className = 'dm-bin-btn' + (val==0 ? ' sel-red' : '');
+}
+function dmSelectBanderes(val) {
+  _dmBanderes = val;
+  document.getElementById('dmBanderesSi').className = 'dm-bin-btn' + (val==1 ? ' sel-ok'  : '');
+  document.getElementById('dmBanderesNo').className = 'dm-bin-btn' + (val==0 ? ' sel-red' : '');
+}
+
+async function dmGuardarHabilitat() {
+  if (!_dmCursaId) {
+    try {
+      const st = await apiCall('getLiveStatus');
+      if (st?.cursa_id) _dmCursaId = st.cursa_id;
+      else { dmToast('Error: no s\'ha trobat l\'ID de cursa', 'danger'); return; }
+    } catch { dmToast('Error crític', 'danger'); return; }
+  }
+  const btn = document.getElementById('dmBtnFinalitzar');
+  btn.disabled = true; btn.textContent = 'Guardant…';
+  try {
+    const res = await apiCall('saveSkill', {
+      cursa_id:     _dmCursaId,
+      globus_petat: _dmGlobus == 1 ? 0 : 1,
+      banderes:     _dmBanderes == 1 ? 3 : 0,
+    });
+    if (res.success) {
+      dmToast('Resultats guardats correctament', 'success');
+      _dmCursaId = null;
+      document.getElementById('dmPuntuar').style.display = 'none';
+      dmRefreshHistorial();
+      setTimeout(() => dmSetMode('dir'), 400);
+    } else {
+      dmToast('Error al guardar: ' + (res.error||''), 'danger');
+      btn.disabled = false; btn.textContent = '☁ FINALITZAR I GUARDAR';
+    }
+  } catch {
+    dmToast('Error al guardar', 'danger');
+    btn.disabled = false; btn.textContent = '☁ FINALITZAR I GUARDAR';
+  }
+}
+
+/* ── ACCIONS ────────────────────────────────────────────────────── */
+function dmConfirmBloqueig() {
+  const tancant = _dmBloqueig != 1;
+  dmModal({
+    icon: tancant ? '🚨' : '✅',
+    title: tancant ? 'Tancar Pista' : 'Reobrir Pista',
+    body: tancant ? 'Es tancarà la pista per emergència. Cap baixada podrà iniciar-se fins que es reobri.' : 'Es reobrirà la pista per al proper llançament.',
+    confirmLabel: tancant ? 'Sí, tancar' : 'Sí, reobrir',
+    confirmClass: tancant ? 'mb-red' : 'mb-ok',
+    onConfirm: async () => {
+      await apiCall('toggleBloqueig', {estat: tancant ? 1 : 0});
+      dmToast(tancant ? 'Pista tancada' : 'Pista reoberta', tancant ? 'danger' : 'success');
+      dmRefresh();
+    }
+  });
+}
+
+function dmConfirmAnular() {
+  if (!_dmPenyaId) { dmToast('No hi ha ningú en pista', 'warning'); return; }
+  const nom = document.getElementById('dmNomPenya').textContent;
+  dmModal({
+    icon: '↩️', title: 'Anul·lar Baixada',
+    body: `S'anul·larà la baixada de <strong>${nom}</strong>. La penya <strong>repetirà</strong> la baixada: no quedarà registrada al sistema.`,
+    confirmLabel: 'Sí, anul·lar', confirmClass: 'mb-yel',
+    onConfirm: async () => {
+      await apiCall('anularBaixada', {penya_id: _dmPenyaId});
+      dmToast('Baixada anul·lada', 'warning');
+      document.getElementById('dmPuntuar').style.display = 'none';
+      _dmCursaId = null; dmRefresh();
+    }
+  });
+}
+
+function dmConfirmDNF() {
+  const hiHaPuntuar = document.getElementById('dmPuntuar').style.display !== 'none';
+  const nom = hiHaPuntuar
+    ? document.getElementById('dmPuntNom').textContent
+    : (document.getElementById('dmNomPenya').textContent || '---');
+  if (!_dmPenyaId && !hiHaPuntuar) { dmToast('No hi ha ningú en pista', 'warning'); return; }
+  dmModal({
+    icon: '🚫', title: 'Forçar DNF',
+    body: `Es registrarà un <strong>DNF</strong> per a <strong>${nom}</strong>.<br>La penya queda <strong>fora de classificació de velocitat</strong>. Acció definitiva i no recuperable.`,
+    confirmLabel: 'Confirmar DNF', confirmClass: 'mb-red',
+    onConfirm: async () => {
+      await apiCall('setDNF');
+      dmToast(`DNF: ${nom}`, 'danger');
+      document.getElementById('dmPuntuar').style.display = 'none';
+      _dmCursaId = null; dmRefreshHistorial(); dmRefresh();
+    }
+  });
+}
+
+function dmConfirmSorteig() {
+  dmModal({
+    icon: '🔀', title: 'Generar Ordre de Sortida',
+    body: 'Es generarà un ordre aleatori per a totes les penyes <strong>APTE</strong>. L\'ordre actual es perdrà completament.',
+    confirmLabel: 'Generar ordre', confirmClass: 'mb-yel',
+    onConfirm: async () => {
+      const r = await apiCall('sortejarOrdre');
+      if (r.success) { dmToast('Ordre generat aleatòriament','success'); _dmPenyes=[]; dmRefresh(); }
+      else dmToast('Error en el sorteig','danger');
+    }
+  });
+}
+
+async function dmSendMsg(m) {
+  if (!m?.trim()) return;
+  await apiCall('enviarMissatgeSpeaker', {missatge: m.trim()});
+  dmToast('Missatge enviat','info');
+  document.getElementById('dmCustomMsg').value = '';
+}
+
+function escHtml(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── INIT ───────────────────────────────────────────────────────── */
+setInterval(() => apiCall('heartbeat', {modul:'direccio'}), 10000);
+setInterval(dmRefresh, 2500);
+dmRefresh();
+dmRefreshHistorial();
+</script>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+  <div id="liveToast" class="toast hide shadow-lg" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-bold" id="toastMsg"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+<script src="/js/shell.js"></script>
+
+</body>
+</html>

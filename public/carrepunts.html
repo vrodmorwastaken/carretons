@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carretons - Carrepunts</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { background-color: #f8f9fa; overscroll-behavior-y: contain; font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif; }
+        body.pending { visibility: hidden; }
+        .navbar-brand { letter-spacing: 1px; }
+        .card-menu { transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; border: none; }
+        .card-menu:active { transform: scale(0.95); }
+
+        /* Colors Custom Admin i Sincronització */
+        .bg-indigo { background-color: #6610f2 !important; color: white; }
+        .bg-teal { background-color: #20c997 !important; color: white; }
+        .bg-slate { background-color: #6c757d !important; color: white; }
+        .bg-orange { background-color: #fd7e14 !important; color: white; }
+
+        .text-indigo { color: #6610f2 !important; }
+        .text-teal { color: #20c997 !important; }
+        .text-slate { color: #6c757d !important; }
+        .text-orange { color: #fd7e14 !important; }
+
+        .nav-link { font-size: 0.85rem; font-weight: 700 !important; display: flex; align-items: center; gap: 5px; }
+        .nav-link i { font-size: 1.1rem; }
+
+        /* Ajustos icones Dashboard */
+        .card-menu i { font-size: 3.5rem; margin-bottom: 0.5rem; }
+</style>
+
+    <script src="/js/common.js"></script>
+</head>
+<body class="pending">
+
+<div id="nav-root"></div>
+
+<div class="container-fluid pb-5">
+<!-- ================================================================
+     MOD_CARREPUNTS.PHP  —  Classificació Final de la Baixada
+     Carrepunts + Punts de Festa Major
+     ================================================================ -->
+<style>
+#carre-root {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f4f5f7;
+  min-height: 100vh;
+  padding: 16px;
+  color: #1a1d23;
+}
+#carre-root *, #carre-root *::before, #carre-root *::after { box-sizing: border-box; }
+
+/* ── Capçalera ── */
+.carre-header {
+  background: linear-gradient(135deg, #1a1d23 0%, #2d3748 100%);
+  border-radius: 14px;
+  padding: 20px 24px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.carre-header h2 { margin: 0; font-size: clamp(1.2rem,3vw,1.6rem); font-weight: 800; letter-spacing: -.5px; }
+.carre-header .sub { font-size: .75rem; opacity: .65; margin-top: 2px; }
+.carre-live-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.25);
+  animation: pulse-g 1.5s ease-in-out infinite;
+  display: inline-block; margin-right: 6px;
+}
+@keyframes pulse-g { 0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.25)} 50%{box-shadow:0 0 0 7px rgba(34,197,94,0)} }
+
+/* ── Llegenda de punts ── */
+.carre-llegenda {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 16px;
+}
+.carre-llegenda-item {
+  background: #fff; border-radius: 8px;
+  padding: 8px 14px; font-size: .72rem; font-weight: 700;
+  border: 1px solid #e2e5ea;
+  display: flex; align-items: center; gap: 6px;
+}
+.dot-vel { width:10px;height:10px;border-radius:50%;background:#1d4ed8;display:inline-block; }
+.dot-ban { width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block; }
+.dot-glo { width:10px;height:10px;border-radius:50%;background:#0891b2;display:inline-block; }
+.dot-est { width:10px;height:10px;border-radius:50%;background:#7c3aed;display:inline-block; }
+
+/* ── Filtres / cerca ── */
+.carre-toolbar {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center;
+}
+.carre-search {
+  flex: 1; min-width: 200px;
+  padding: 9px 14px; border: 1px solid #e2e5ea; border-radius: 8px;
+  font-size: .85rem; outline: none; background: #fff;
+  transition: border-color .15s;
+}
+.carre-search:focus { border-color: #1d4ed8; }
+.carre-btn-refresh {
+  padding: 9px 16px; background: #1d4ed8; color: #fff; border: none;
+  border-radius: 8px; font-size: .82rem; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: all .15s;
+  white-space: nowrap;
+}
+.carre-btn-refresh:hover { background: #1e40af; }
+.carre-btn-refresh.spinning svg { animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Taula ── */
+.carre-card {
+  background: #fff; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+  border: 1px solid #e2e5ea; overflow: hidden;
+}
+.carre-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.carre-table thead th {
+  background: #f8fafc; padding: 10px 12px;
+  text-align: center; font-size: .65rem; font-weight: 800;
+  letter-spacing: .07em; text-transform: uppercase; color: #6b7280;
+  border-bottom: 2px solid #e2e5ea; white-space: nowrap;
+}
+.carre-table thead th.th-nom { text-align: left; }
+.carre-table tbody tr { border-bottom: 1px solid #f1f3f5; transition: background .12s; }
+.carre-table tbody tr:last-child { border-bottom: none; }
+.carre-table tbody tr:hover { background: #f8faff; }
+
+/* Files especials */
+.carre-table tbody tr.tr-or     { background: linear-gradient(90deg,#fffbeb 0%,#fff 80%); }
+.carre-table tbody tr.tr-argent { background: linear-gradient(90deg,#f8fafc 0%,#fff 80%); }
+.carre-table tbody tr.tr-bronze { background: linear-gradient(90deg,#fff7f0 0%,#fff 80%); }
+.carre-table tbody tr.tr-empat td.td-nom::after {
+  content: ' ⚖'; font-size: .7rem; opacity: .5;
+}
+
+/* Cel·les */
+.carre-table td { padding: 10px 12px; text-align: center; vertical-align: middle; }
+.carre-table td.td-pos {
+  font-family: 'Courier New', monospace; font-weight: 800;
+  font-size: 1rem; min-width: 44px;
+}
+.carre-table td.td-nom { text-align: left; min-width: 130px; }
+.nom-penya   { font-weight: 700; font-size: .88rem; }
+.nom-carreto { font-size: .72rem; color: #6b7280; }
+.carre-table td.td-vel   { color: #1d4ed8; font-weight: 700; }
+.carre-table td.td-band  { color: #16a34a; font-weight: 700; }
+.carre-table td.td-glob  { color: #0891b2; font-weight: 700; }
+.carre-table td.td-est   { color: #7c3aed; font-weight: 700; }
+.carre-table td.td-total {
+  font-weight: 800; font-size: .95rem; color: #1a1d23;
+  background: #f8fafc;
+}
+.carre-table td.td-festa { min-width: 80px; }
+
+/* Badges */
+.pos-badge {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 800; margin: auto;
+}
+.pos-or     { background: #fef9c3; color: #92400e; border: 2px solid #fbbf24; }
+.pos-argent { background: #f1f5f9; color: #475569; border: 2px solid #94a3b8; }
+.pos-bronze { background: #fff7ed; color: #9a3412; border: 2px solid #fb923c; }
+.pos-normal { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; font-size: .75rem; }
+
+.festa-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 4px 10px; border-radius: 20px; font-size: .75rem; font-weight: 800; gap: 4px;
+}
+.festa-3 { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+.festa-2 { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+.festa-1 { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+
+.band-ok   { color: #16a34a; }
+.band-no   { color: #9ca3af; }
+.glob-ok   { color: #0891b2; }
+.glob-no   { color: #9ca3af; }
+
+/* Resum global */
+.carre-resum {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px; margin-bottom: 16px;
+}
+.carre-resum-item {
+  background: #fff; border-radius: 10px; padding: 14px 16px;
+  border: 1px solid #e2e5ea; text-align: center;
+}
+.carre-resum-item .num { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.carre-resum-item .lbl { font-size: .65rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; margin-top: 4px; }
+
+/* Buit / error */
+.carre-empty {
+  text-align: center; padding: 40px 20px;
+  color: #6b7280; font-size: .85rem;
+}
+
+/* Responsive: amagar columnes en mòbil */
+@media (max-width: 640px) {
+  .hide-sm { display: none !important; }
+  .carre-table td, .carre-table th { padding: 8px 7px; }
+  .carre-header { padding: 14px 16px; }
+}
+</style>
+
+<div id="carre-root">
+
+  <!-- Capçalera -->
+  <div class="carre-header">
+    <div>
+      <h2>🏆 Classificació Carrepunts</h2>
+      <div class="sub">Baixada de Carretons · Classificació oficial</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:.75rem;opacity:.8;">
+      <span class="carre-live-dot"></span> Actualització automàtica
+    </div>
+  </div>
+
+  <!-- Resum -->
+  <div class="carre-resum" id="carre-resum">
+    <div class="carre-resum-item">
+      <div class="num" id="res-total">—</div>
+      <div class="lbl">Penyes classificades</div>
+    </div>
+    <div class="carre-resum-item">
+      <div class="num" id="res-maxpunts" style="color:#1d4ed8">—</div>
+      <div class="lbl">Màxim carrepunts</div>
+    </div>
+    <div class="carre-resum-item">
+      <div class="num" id="res-banderes" style="color:#16a34a">—</div>
+      <div class="lbl">Amb 3 banderes</div>
+    </div>
+    <div class="carre-resum-item">
+      <div class="num" id="res-globus" style="color:#0891b2">—</div>
+      <div class="lbl">Globus salvat</div>
+    </div>
+  </div>
+
+  <!-- Llegenda -->
+  <div class="carre-llegenda">
+    <div class="carre-llegenda-item"><span class="dot-vel"></span>Velocitat (0-10)</div>
+    <div class="carre-llegenda-item"><span class="dot-ban"></span>Banderes (0 o 10)</div>
+    <div class="carre-llegenda-item"><span class="dot-glo"></span>Globus (0 o 10)</div>
+    <div class="carre-llegenda-item"><span class="dot-est"></span>Estètica (0-10)</div>
+    <div class="carre-llegenda-item" style="background:#fffbeb;border-color:#fbbf24;">🏆 1r-3r → 3 pts Festa</div>
+    <div class="carre-llegenda-item" style="background:#eff6ff;border-color:#93c5fd;">🥈 4t-10è → 2 pts Festa</div>
+    <div class="carre-llegenda-item" style="background:#f9fafb;border-color:#e5e7eb;">🎗 11è+ → 1 pt Festa</div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="carre-toolbar">
+    <input type="text" class="carre-search" id="carreSearch"
+           placeholder="🔍  Cerca penya..."
+           oninput="filtrarCarrepunts()">
+    <button class="carre-btn-refresh" id="btnRefresh" onclick="carregarCarrepunts()">
+      <svg id="iconRefresh" width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Actualitzar
+    </button>
+  </div>
+
+  <!-- Taula principal -->
+  <div class="carre-card">
+    <div style="overflow-x:auto;">
+      <table class="carre-table">
+        <thead>
+          <tr>
+            <th>Pos.</th>
+            <th class="th-nom">Penya</th>
+            <th class="hide-sm" style="color:#1d4ed8">⏱ Vel.</th>
+            <th class="hide-sm" style="color:#16a34a">🚩 Band.</th>
+            <th class="hide-sm" style="color:#0891b2">🎈 Glob.</th>
+            <th class="hide-sm" style="color:#7c3aed">🎨 Est.</th>
+            <th>Total</th>
+            <th>Festa M.</th>
+          </tr>
+        </thead>
+        <tbody id="carreBody">
+          <tr><td colspan="8" class="carre-empty">Carregant dades...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="font-size:.68rem;color:#9ca3af;text-align:right;margin-top:8px;"
+       id="carre-ts">—</div>
+
+</div>
+
+<script>
+let _carreData = [];
+
+/* ── Format temps ── */
+function fmtMs(ms) {
+  if (!ms || ms <= 0) return '—';
+  const m  = Math.floor(ms / 60000);
+  const s  = Math.floor((ms % 60000) / 1000);
+  const mi = Math.floor((ms % 1000) / 10);
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(mi).padStart(2,'0')}`;
+}
+
+/* ── Carregar dades ── */
+async function carregarCarrepunts() {
+  const btn = document.getElementById('btnRefresh');
+  const ico = document.getElementById('iconRefresh');
+  btn.classList.add('spinning');
+
+  try {
+    const data = await apiCall('getCarrepunts');
+
+    if (!data || data.error) {
+      document.getElementById('carreBody').innerHTML =
+        `<tr><td colspan="8" class="carre-empty">⚠️ Error carregant les dades.</td></tr>`;
+      return;
+    }
+
+    _carreData = data;
+    actualitzaResum(data);
+    renderCarrepunts(data);
+    document.getElementById('carre-ts').textContent =
+      'Actualitzat: ' + new Date().toLocaleTimeString('ca-ES');
+
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+/* ── Resum ── */
+function actualitzaResum(data) {
+  document.getElementById('res-total').textContent    = data.length;
+  document.getElementById('res-maxpunts').textContent =
+    data.length ? data[0].total.toFixed(1) : '0';
+  document.getElementById('res-banderes').textContent =
+    data.filter(r => r.pts_banderes === 10).length;
+  document.getElementById('res-globus').textContent   =
+    data.filter(r => r.pts_globus === 10).length;
+}
+
+/* ── Render taula ── */
+function renderCarrepunts(data) {
+  const body   = document.getElementById('carreBody');
+  const filtre = document.getElementById('carreSearch').value.toLowerCase();
+
+  const filtrat = filtre
+    ? data.filter(r =>
+        (r.nom || '').toLowerCase().includes(filtre) ||
+        (r.nom_carreto || '').toLowerCase().includes(filtre))
+    : data;
+
+  if (!filtrat.length) {
+    body.innerHTML = '<tr><td colspan="8" class="carre-empty">Cap resultat trobat</td></tr>';
+    return;
+  }
+
+  // Detectar empats: un registre té empat si la fila anterior té el mateix total
+  const empats = new Set();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i].total === data[i-1].total) {
+      empats.add(data[i].id);
+      empats.add(data[i-1].id);
+    }
+  }
+
+  body.innerHTML = filtrat.map(r => {
+    const pos = r.pos_final;
+
+    // Badge de posició
+    let posCls, posIco;
+    if      (pos === 1) { posCls = 'pos-or';     posIco = '🥇'; }
+    else if (pos === 2) { posCls = 'pos-argent';  posIco = '🥈'; }
+    else if (pos === 3) { posCls = 'pos-bronze';  posIco = '🥉'; }
+    else                { posCls = 'pos-normal';  posIco = pos; }
+
+    // Classe de fila
+    let trCls = pos === 1 ? 'tr-or' : pos === 2 ? 'tr-argent' : pos === 3 ? 'tr-bronze' : '';
+    if (empats.has(r.id)) trCls += ' tr-empat';
+
+    // Badge Festa Major
+    const festaCls = r.punts_festa === 3 ? 'festa-3' : r.punts_festa === 2 ? 'festa-2' : 'festa-1';
+    const festaIco = r.punts_festa === 3 ? '🏆' : r.punts_festa === 2 ? '🥈' : '🎗';
+
+    // Icones habilitat
+    const bandIco = r.pts_banderes === 10
+      ? '<span class="band-ok">✅ 10</span>'
+      : `<span class="band-no">🚩 0</span>`;
+    const globIco = r.pts_globus === 10
+      ? '<span class="glob-ok">🎈 10</span>'
+      : `<span class="glob-no">💥 0</span>`;
+
+    return `<tr class="${trCls}">
+      <td class="td-pos"><div class="pos-badge ${posCls}">${posIco}</div></td>
+      <td class="td-nom ${empats.has(r.id) ? 'td-nom' : ''}">
+        <div class="nom-penya">${escHtml(r.nom)}</div>
+        <div class="nom-carreto">${escHtml(r.nom_carreto || '—')}</div>
+      </td>
+      <td class="td-vel hide-sm">
+        ${r.pts_velocitat}<br>
+        <span style="font-size:.65rem;color:#94a3b8;font-weight:400;">${fmtMs(r.temps_ms)}</span>
+      </td>
+      <td class="td-band hide-sm">${bandIco}</td>
+      <td class="td-glob hide-sm">${globIco}</td>
+      <td class="td-est hide-sm">${parseFloat(r.pts_estetica).toFixed(1)}</td>
+      <td class="td-total">${parseFloat(r.total).toFixed(1)}</td>
+      <td class="td-festa">
+        <span class="festa-badge ${festaCls}">${festaIco} ${r.punts_festa} pt${r.punts_festa !== 1 ? 's' : ''}</span>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Filtre cerca ── */
+function filtrarCarrepunts() {
+  renderCarrepunts(_carreData);
+}
+
+/* ── Helper escHtml (pot ja existir globalment) ── */
+function escHtml(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', carregarCarrepunts);
+setInterval(carregarCarrepunts, 30000); // refresc automàtic cada 30 s
+</script>
+
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+  <div id="liveToast" class="toast hide shadow-lg" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-bold" id="toastMsg"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+<script src="/js/shell.js"></script>
+
+</body>
+</html>
